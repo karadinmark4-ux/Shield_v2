@@ -1,0 +1,2764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SHIELD · Neural Mindspace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Orbitron:wght@600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<style>
+:root {
+ --bg-main: #05080f;
+ --bg-surface: rgba(14, 23, 42, 0.55);
+ --bg-surface-glow: rgba(22, 36, 68, 0.8);
+ --border-color: rgba(125, 214, 232, 0.14);
+ --border-hover: rgba(125, 214, 232, 0.45);
+ --accent: #7dd6e8;
+ --accent-glow: rgba(125, 214, 232, 0.3);
+ --text-main: #eef4f9;
+ --text-dim: #94a3b8;
+ --text-muted: #5b6b82;
+ --good: #45d49a;
+ /* navigation accents */
+ --c-map: #2bdcff;
+ --c-library: #b478ff;
+ --c-cards: #ffd23f;
+ --c-challenges: #ff5c8a;
+ --c-diary: #ff7ae0;
+ --c-services: #4fd1c5;
+ /* services page group accents */
+ --sc-analysis: #4fd1c5;
+ --sc-dash: #5ec8f5;
+ --sc-perf: #e8cf86;
+ --sc-tools: #b478ff;
+ --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+ --font-display: 'Orbitron', 'Plus Jakarta Sans', system-ui, sans-serif;
+ --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+ --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+ --r-lg: 20px; --r-md: 14px; --r-sm: 10px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; background: var(--bg-main); }
+body { height: 100vh; height: 100dvh; font-family: var(--font-sans); color: var(--text-main);
+ overflow: hidden; display: flex; flex-direction: column; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+
+/* ── page background image ────────────────────────────────────────────────
+   Drop any image in here and the whole app sits on top of it. Set the URL in
+   --bg-image below; leave it as `none` to keep the plain gradient look.
+   Examples:
+     --bg-image: url('lab.jpg');                  (file next to this HTML)
+     --bg-image: url('assets/bg/lab.jpg');        (subfolder)
+     --bg-image: url('https://your-host/lab.jpg');(remote, must allow hotlinking)
+   --bg-dim controls how strongly it's darkened; the scrim is what keeps the
+   text and HUD panels legible over a busy photo. Raise it for lighter images,
+   lower it for already-dark ones. */
+:root{
+ --bg-image: url('https://png.pngtree.com/background/20230401/original/pngtree-science-and-technology-laboratory-background-picture-image_2253322.jpg');
+ --bg-dim: 0.82;
+ --bg-blur: 2px;
+}
+.bg-photo{position:fixed;inset:0;z-index:-1;pointer-events:none;
+ background-image:var(--bg-image);
+ background-size:cover;background-position:center;background-repeat:no-repeat;
+ filter:blur(var(--bg-blur)) saturate(0.9);
+ transform:scale(1.04)}          /* hides the blur's soft edges */
+/* scrim: darkens the photo and tints it into the app's blue palette */
+.bg-photo::after{content:'';position:absolute;inset:0;
+ background:
+   radial-gradient(at 50% 40%, rgba(5,10,22,calc(var(--bg-dim) * 0.72)) 0%, rgba(4,8,18,var(--bg-dim)) 70%),
+   linear-gradient(180deg, rgba(8,16,34,0.55), rgba(4,8,18,0.75))}
+
+/* Only translucent accents here — an opaque colour at the end of this stack
+   would paint over .bg-photo, since a block's own background is painted above
+   negative z-index layers. The solid base colour lives on <html> instead. */
+body { background:
+   radial-gradient(at 0% 0%, rgba(16, 30, 60, 0.55) 0px, transparent 48%),
+   radial-gradient(at 100% 100%, rgba(10, 16, 34, 0.9) 0px, transparent 50%);
+}
+
+/* ambient living background */
+.ambient { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.ambient::before, .ambient::after {
+ content: ''; position: absolute; width: 60vw; height: 60vw; border-radius: 50%; filter: blur(90px); opacity: 0.20;
+}
+.ambient::before { background: radial-gradient(circle, #1f6f8c, transparent 70%); top: -20vw; left: -10vw; animation: drift1 26s ease-in-out infinite; }
+.ambient::after { background: radial-gradient(circle, #5b3f8c, transparent 70%); bottom: -25vw; right: -12vw; animation: drift2 32s ease-in-out infinite; }
+@keyframes drift1 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(8vw,6vh) scale(1.12); } }
+@keyframes drift2 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-7vw,-5vh) scale(1.08); } }
+
+.topbar, .iconbar, .page { position: relative; z-index: 1; }
+.topbar, .iconbar { flex-shrink: 0; }
+
+.topbar {
+ height: 60px; background: rgba(7, 11, 22, 0.7); backdrop-filter: blur(14px);
+ border-bottom: 1px solid var(--border-color);
+ display: flex; align-items: center; padding: 0 24px; gap: 20px; z-index: 100;
+}
+.brand { display:flex; align-items:center; gap:12px; cursor:pointer; transition: var(--transition); }
+.brand:hover { filter: brightness(1.12); }
+.brand-icon-box {
+ position: relative; width: 38px; height: 38px; flex-shrink: 0;
+ display: flex; align-items: center; justify-content: center;
+ background: linear-gradient(135deg, rgba(15,24,44,0.9), rgba(9,14,28,0.85));
+ border: 1px solid var(--border-color);
+ clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+ box-shadow: 0 0 16px rgba(125,214,232,0.10), inset 0 0 12px rgba(125,214,232,0.05);
+}
+.brand-icon-box::before { content:''; position:absolute; left:0; top:0; width:3px; height:100%; background: linear-gradient(180deg, var(--accent), transparent 85%); opacity:0.75; }
+.brand-icon-box svg { width: 22px; height: 22px; color:var(--accent); filter: drop-shadow(0 0 9px var(--accent-glow)); }
+.brand-text-box {
+ position: relative; padding: 6px 16px 6px 12px;
+ background: linear-gradient(135deg, rgba(15,24,44,0.9), rgba(9,14,28,0.85));
+ border: 1px solid var(--border-color);
+ clip-path: polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px);
+ box-shadow: 0 0 16px rgba(125,214,232,0.10), inset 0 0 12px rgba(125,214,232,0.05);
+}
+.brand-text-box::before { content:''; position:absolute; left:0; top:0; width:3px; height:100%; background: linear-gradient(180deg, var(--accent), transparent 85%); opacity:0.75; }
+.brand-name { font-family: var(--font-display); font-size:18px; font-weight:800; letter-spacing:.16em; color:var(--accent); text-shadow:0 0 14px var(--accent-glow); line-height:1; }
+.brand-sub { font-size:8.5px; font-weight:600; letter-spacing:.03em; color:var(--accent); margin-top:4px; line-height:1.1; white-space:nowrap; }
+@media (max-width:760px){ .brand-sub{ display:none; } }
+
+.xp-group { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+
+/* mobile-only compact XP button in the topbar's top-right corner; hidden on
+   desktop, where the full rank card lives in the topbar. Tapping it opens
+   the .xp-group card as a dropdown (see the 920px media block). */
+.xp-mini { display: none; margin-left: auto; align-items: center; gap: 8px; background: rgba(15,24,44,0.9); border: 1px solid var(--border-color); border-radius: 100px; padding: 7px 12px; color: var(--accent); font-family: var(--font-display); font-weight: 800; font-size: 11px; letter-spacing: 0.08em; cursor: pointer; flex-shrink: 0; }
+.xp-mini-track { width: 44px; height: 5px; background: rgba(255,255,255,0.08); border-radius: 100px; overflow: hidden; }
+.xp-mini-fill { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, #3f7fc7, var(--accent)); border-radius: 100px; box-shadow: 0 0 8px var(--accent-glow); transition: width 0.6s cubic-bezier(0.16,1,0.3,1); }
+
+/* rank/XP HUD card — angular cut corners + accent edge, echoing the brand
+   wordmark's display font so the level readout reads as one design language */
+.rank-card {
+ position: relative; display: flex; flex-direction: column; gap: 6px;
+ padding: 7px 18px 7px 14px; min-width: 220px;
+ background: linear-gradient(135deg, rgba(15,24,44,0.88), rgba(9,14,28,0.82));
+ border: 1px solid var(--border-color);
+ clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+ box-shadow: 0 0 18px rgba(125,214,232,0.07), inset 0 0 16px rgba(125,214,232,0.03);
+}
+.rank-card::before { content:''; position:absolute; left:0; top:0; width:3px; height:100%; background: linear-gradient(180deg, var(--accent), transparent 85%); opacity:0.75; }
+.rank-card-top { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.xp-lbl { font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--text-dim); white-space: nowrap; letter-spacing: 0.02em; }
+.xp-lbl b { font-family: var(--font-display); font-weight: 800; font-size: 12.5px; letter-spacing: 0.08em; color: var(--accent); text-shadow: 0 0 10px var(--accent-glow); text-transform: uppercase; }
+.xp-num { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-muted); letter-spacing: 0.02em; white-space: nowrap; }
+.xp-track { position: relative; width: 100%; height: 7px; background: rgba(255,255,255,0.05); border-radius: 100px; overflow: hidden; border: 1px solid rgba(255,255,255,0.03); }
+.xp-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #3f7fc7, var(--accent)); border-radius: 100px; box-shadow: 0 0 10px var(--accent-glow); transition: width 0.6s cubic-bezier(0.16,1,0.3,1); }
+.xp-track::after { content:''; position:absolute; inset:0; pointer-events:none; background-image: repeating-linear-gradient(90deg, rgba(4,7,13,0.5) 0 1.5px, transparent 1.5px 11px); }
+
+.streak {
+ position: relative; display: flex; align-items: center; gap: 6px;
+ font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: #ffd76b; white-space: nowrap; letter-spacing: 0.03em;
+ background: linear-gradient(135deg, rgba(232,207,134,0.11), rgba(232,207,134,0.04));
+ border: 1px solid rgba(232,207,134,0.35);
+ clip-path: polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px);
+ padding: 8px 16px; box-shadow: 0 0 16px rgba(232,207,134,0.10), inset 0 0 12px rgba(232,207,134,0.04);
+}
+
+.iconbar {
+ height: 74px; margin: 12px 24px;
+ background: rgba(7, 11, 22, 0.7); backdrop-filter: blur(14px);
+ border: 1px solid var(--border-color);
+ clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+ box-shadow: 0 0 16px rgba(125,214,232,0.10), inset 0 0 12px rgba(125,214,232,0.05);
+ display: flex; align-items: center; justify-content: center; gap: 14px; padding: 0 24px; z-index: 90;
+ position: relative;
+}
+.iconbar::before { content:''; position:absolute; left:0; top:0; width:3px; height:100%; background: linear-gradient(180deg, var(--accent), transparent 85%); opacity:0.75; }
+.ib-btn {
+ display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px;
+ cursor: pointer; padding: 9px 18px 13px; border-radius: var(--r-md); color: var(--ib);
+ border: 1px solid color-mix(in srgb, var(--ib) 24%, rgba(255,255,255,0.08));
+ background: linear-gradient(180deg, rgba(24,36,60,0.85) 0%, rgba(9,14,27,0.8) 100%);
+ box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -10px 14px -10px rgba(0,0,0,0.5), 0 3px 8px rgba(0,0,0,0.35), 0 0 6px color-mix(in srgb, var(--ib) 12%, transparent);
+ transition: var(--transition); min-width: 86px; position: relative;
+}
+.ib-btn::after {
+ content: ''; position: absolute; left: 16px; right: 16px; bottom: 6px; height: 2px; border-radius: 100px;
+ background: var(--ib); opacity: 0.6; box-shadow: 0 0 5px color-mix(in srgb, var(--ib) 70%, transparent);
+}
+.ib-btn i, .ib-btn svg { width: 22px; height: 22px; opacity: 0.95; transition: var(--transition); filter: drop-shadow(0 0 4px color-mix(in srgb, var(--ib) 40%, transparent)); }
+.ib-btn span { font-size: 10px; font-weight: 700; letter-spacing: .07em; color: var(--text-muted); transition: var(--transition); }
+.ib-btn:hover { background: linear-gradient(180deg, color-mix(in srgb, var(--ib) 14%, #182338 86%) 0%, color-mix(in srgb, var(--ib) 10%, #0b1120 90%) 100%); border-color: color-mix(in srgb, var(--ib) 45%, transparent); transform: translateY(-2px); box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -10px 14px -10px rgba(0,0,0,0.5), 0 6px 14px rgba(0,0,0,0.4), 0 0 8px color-mix(in srgb, var(--ib) 22%, transparent); }
+.ib-btn:hover i, .ib-btn:hover svg { opacity: 1; filter: drop-shadow(0 0 7px color-mix(in srgb, var(--ib) 55%, transparent)); }
+.ib-btn:hover span { color: var(--ib); }
+.ib-btn.active { background: linear-gradient(180deg, color-mix(in srgb, var(--ib) 20%, #182338 80%) 0%, color-mix(in srgb, var(--ib) 12%, #0b1120 88%) 100%); border-color: color-mix(in srgb, var(--ib) 65%, transparent); box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -10px 14px -10px rgba(0,0,0,0.5), 0 0 12px color-mix(in srgb, var(--ib) 24%, transparent); }
+.ib-btn.active i, .ib-btn.active svg { opacity: 1; filter: drop-shadow(0 0 8px color-mix(in srgb, var(--ib) 60%, transparent)); }
+.ib-btn.active span { color: var(--ib); }
+.ib-btn.active::after { opacity: 0.9; height: 2.5px; }
+
+/* Height comes from the flex column, not a magic offset: mobile browsers
+   report 100vh as the chrome-free height, which pushed the top bar out of
+   reach and left a strip at the bottom. */
+.page { display: none; flex: 1 1 auto; min-height: 0; overflow: hidden; animation: fadeIn 0.4s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ===== MAP PAGE ===== */
+#page-map { position: relative; }
+.map-layout { display: flex; height: 100%; width: 100%; position: relative; }
+
+.metrics-dock {
+ width: 328px; flex-shrink: 0; height: calc(100% - 24px); margin: 12px 0 12px 12px;
+ background: linear-gradient(180deg, rgba(10, 17, 34, 0.7), rgba(8, 13, 26, 0.55));
+ backdrop-filter: blur(16px);
+ border: 1px solid rgba(127, 230, 255, 0.32);
+ border-radius: var(--r-lg);
+ box-shadow: 0 0 22px rgba(127, 230, 255, 0.08), inset 0 0 20px rgba(127, 230, 255, 0.03);
+ padding: 18px 20px 20px; overflow-y: auto; overflow-x: hidden; position: relative; z-index: 20;
+ display: flex; flex-direction: column;
+ /* scrolling still works by wheel/touch, the bar is just not drawn */
+ scrollbar-width: none; -ms-overflow-style: none;
+}
+/* same faint network-mesh texture as the iconbar, tuned taller/narrower for
+   the sidebar's aspect ratio — sits behind all dock content, never over it */
+.metrics-dock::before {
+ content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+ background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 900" preserveAspectRatio="none"><path id="dp0" d="M0,40 L320,420" fill="none" stroke="%237fe6ff" stroke-width="1" stroke-opacity="0.16"/><path id="dp1" d="M30,900 L300,90" fill="none" stroke="%237fe6ff" stroke-width="1" stroke-opacity="0.18"/><path id="dp2" d="M0,280 L320,680" fill="none" stroke="%237fe6ff" stroke-width="1" stroke-opacity="0.14"/><path id="dp3" d="M300,0 L0,560" fill="none" stroke="%237fe6ff" stroke-width="1" stroke-opacity="0.16"/><path id="dp4" d="M90,0 L320,820" fill="none" stroke="%237fe6ff" stroke-width="1" stroke-opacity="0.14"/><path id="dp5" d="M0,760 L240,40" fill="none" stroke="%237fe6ff" stroke-width="1" stroke-opacity="0.18"/><path id="dp6" d="M320,200 L60,900" fill="none" stroke="%237fe6ff" stroke-width="1" stroke-opacity="0.12"/><path id="dp7" d="M0,120 L320,80" fill="none" stroke="%237fe6ff" stroke-width="1" stroke-opacity="0.11"/><path id="dp8" d="M160,0 L0,300" fill="none" stroke="%237fe6ff" stroke-width="1" stroke-opacity="0.12"/><path id="dp9" d="M320,450 L0,900" fill="none" stroke="%237fe6ff" stroke-width="1" stroke-opacity="0.13"/><path id="dp10" d="M200,0 L320,300" fill="none" stroke="%237fe6ff" stroke-width="1" stroke-opacity="0.14"/><path id="dp11" d="M0,500 L320,540" fill="none" stroke="%237fe6ff" stroke-width="1" stroke-opacity="0.11"/><path id="dp12" d="M260,900 L0,650" fill="none" stroke="%237fe6ff" stroke-width="1" stroke-opacity="0.15"/><path id="dp13" d="M320,650 L150,0" fill="none" stroke="%237fe6ff" stroke-width="1" stroke-opacity="0.13"/><path id="dp14" d="M0,900 L320,760" fill="none" stroke="%237fe6ff" stroke-width="1" stroke-opacity="0.12"/><path id="dp15" d="M140,150 L320,600" fill="none" stroke="%237fe6ff" stroke-width="1" stroke-opacity="0.13"/><path id="dp16" d="M0,600 L180,900" fill="none" stroke="%237fe6ff" stroke-width="1" stroke-opacity="0.14"/><path id="dp17" d="M320,120 L120,900" fill="none" stroke="%237fe6ff" stroke-width="1" stroke-opacity="0.11"/><path id="dp18" d="M0,200 L320,240" fill="none" stroke="%237fe6ff" stroke-width="1" stroke-opacity="0.1"/><path id="dp19" d="M320,340 L0,380" fill="none" stroke="%237fe6ff" stroke-width="1" stroke-opacity="0.11"/><path id="dp20" d="M180,900 L220,0" fill="none" stroke="%237fe6ff" stroke-width="1" stroke-opacity="0.1"/><path id="dp21" d="M0,880 L120,0" fill="none" stroke="%237fe6ff" stroke-width="1" stroke-opacity="0.12"/><path id="dp22" d="M320,520 L60,860" fill="none" stroke="%237fe6ff" stroke-width="1" stroke-opacity="0.1"/><path id="dp23" d="M40,0 L320,540" fill="none" stroke="%237fe6ff" stroke-width="1" stroke-opacity="0.11"/><path id="dp24" d="M0,420 L160,900" fill="none" stroke="%237fe6ff" stroke-width="1" stroke-opacity="0.1"/><path id="dp25" d="M320,780 L200,180" fill="none" stroke="%237fe6ff" stroke-width="1" stroke-opacity="0.12"/><path id="dp26" d="M60,900 L320,640" fill="none" stroke="%237fe6ff" stroke-width="1" stroke-opacity="0.09"/><circle cx="24" cy="860" r="2" fill="%237fe6ff" fill-opacity="0.4"/><circle cx="300" cy="30" r="1.6" fill="%237fe6ff" fill-opacity="0.35"/><circle cx="280" cy="470" r="1.4" fill="%237fe6ff" fill-opacity="0.3"/><circle cx="40" cy="240" r="1.6" fill="%237fe6ff" fill-opacity="0.3"/><circle cx="200" cy="700" r="1.3" fill="%237fe6ff" fill-opacity="0.3"/><circle cx="70" cy="20" r="1.5" fill="%237fe6ff" fill-opacity="0.35"/><circle cx="150" cy="380" r="1.5" fill="%237fe6ff" fill-opacity="0.3"/><circle cx="300" cy="600" r="1.3" fill="%237fe6ff" fill-opacity="0.28"/><circle cx="20" cy="540" r="1.4" fill="%237fe6ff" fill-opacity="0.3"/><circle cx="260" cy="140" r="1.6" fill="%237fe6ff" fill-opacity="0.32"/><circle cx="100" cy="820" r="1.3" fill="%237fe6ff" fill-opacity="0.28"/><circle r="1.5" fill="%23dffaff" fill-opacity="0.55"><animateMotion dur="5.0s" begin="0.0s" repeatCount="indefinite"><mpath href="%23dp0"/></animateMotion></circle><circle r="1.2" fill="%23dffaff" fill-opacity="0.4"><animateMotion dur="5.8s" begin="0.42s" repeatCount="indefinite"><mpath href="%23dp1"/></animateMotion></circle><circle r="1.5" fill="%23dffaff" fill-opacity="0.55"><animateMotion dur="6.6s" begin="0.84s" repeatCount="indefinite"><mpath href="%23dp2"/></animateMotion></circle><circle r="1.2" fill="%23dffaff" fill-opacity="0.4"><animateMotion dur="7.4s" begin="1.26s" repeatCount="indefinite"><mpath href="%23dp3"/></animateMotion></circle><circle r="1.5" fill="%23dffaff" fill-opacity="0.55"><animateMotion dur="8.2s" begin="1.68s" repeatCount="indefinite"><mpath href="%23dp4"/></animateMotion></circle><circle r="1.2" fill="%23dffaff" fill-opacity="0.4"><animateMotion dur="9.0s" begin="2.1s" repeatCount="indefinite"><mpath href="%23dp5"/></animateMotion></circle><circle r="1.5" fill="%23dffaff" fill-opacity="0.55"><animateMotion dur="9.8s" begin="2.52s" repeatCount="indefinite"><mpath href="%23dp6"/></animateMotion></circle><circle r="1.2" fill="%23dffaff" fill-opacity="0.4"><animateMotion dur="5.0s" begin="2.94s" repeatCount="indefinite"><mpath href="%23dp7"/></animateMotion></circle><circle r="1.5" fill="%23dffaff" fill-opacity="0.55"><animateMotion dur="5.8s" begin="3.36s" repeatCount="indefinite"><mpath href="%23dp8"/></animateMotion></circle><circle r="1.2" fill="%23dffaff" fill-opacity="0.4"><animateMotion dur="6.6s" begin="3.78s" repeatCount="indefinite"><mpath href="%23dp9"/></animateMotion></circle><circle r="1.5" fill="%23dffaff" fill-opacity="0.55"><animateMotion dur="7.4s" begin="4.2s" repeatCount="indefinite"><mpath href="%23dp10"/></animateMotion></circle><circle r="1.2" fill="%23dffaff" fill-opacity="0.4"><animateMotion dur="8.2s" begin="4.62s" repeatCount="indefinite"><mpath href="%23dp11"/></animateMotion></circle><circle r="1.5" fill="%23dffaff" fill-opacity="0.55"><animateMotion dur="9.0s" begin="5.04s" repeatCount="indefinite"><mpath href="%23dp12"/></animateMotion></circle><circle r="1.2" fill="%23dffaff" fill-opacity="0.4"><animateMotion dur="9.8s" begin="5.46s" repeatCount="indefinite"><mpath href="%23dp13"/></animateMotion></circle><circle r="1.5" fill="%23dffaff" fill-opacity="0.55"><animateMotion dur="5.0s" begin="0.88s" repeatCount="indefinite"><mpath href="%23dp14"/></animateMotion></circle><circle r="1.2" fill="%23dffaff" fill-opacity="0.4"><animateMotion dur="5.8s" begin="0.5s" repeatCount="indefinite"><mpath href="%23dp15"/></animateMotion></circle><circle r="1.5" fill="%23dffaff" fill-opacity="0.55"><animateMotion dur="6.6s" begin="0.12s" repeatCount="indefinite"><mpath href="%23dp16"/></animateMotion></circle><circle r="1.2" fill="%23dffaff" fill-opacity="0.4"><animateMotion dur="7.4s" begin="7.14s" repeatCount="indefinite"><mpath href="%23dp17"/></animateMotion></circle><circle r="1.5" fill="%23dffaff" fill-opacity="0.55"><animateMotion dur="8.2s" begin="7.56s" repeatCount="indefinite"><mpath href="%23dp18"/></animateMotion></circle><circle r="1.2" fill="%23dffaff" fill-opacity="0.4"><animateMotion dur="9.0s" begin="7.98s" repeatCount="indefinite"><mpath href="%23dp19"/></animateMotion></circle><circle r="1.5" fill="%23dffaff" fill-opacity="0.55"><animateMotion dur="9.8s" begin="8.4s" repeatCount="indefinite"><mpath href="%23dp20"/></animateMotion></circle><circle r="1.2" fill="%23dffaff" fill-opacity="0.4"><animateMotion dur="5.0s" begin="3.82s" repeatCount="indefinite"><mpath href="%23dp21"/></animateMotion></circle><circle r="1.5" fill="%23dffaff" fill-opacity="0.55"><animateMotion dur="5.8s" begin="3.44s" repeatCount="indefinite"><mpath href="%23dp22"/></animateMotion></circle><circle r="1.2" fill="%23dffaff" fill-opacity="0.4"><animateMotion dur="6.6s" begin="3.06s" repeatCount="indefinite"><mpath href="%23dp23"/></animateMotion></circle><circle r="1.5" fill="%23dffaff" fill-opacity="0.55"><animateMotion dur="7.4s" begin="2.68s" repeatCount="indefinite"><mpath href="%23dp24"/></animateMotion></circle><circle r="1.2" fill="%23dffaff" fill-opacity="0.4"><animateMotion dur="8.2s" begin="2.3s" repeatCount="indefinite"><mpath href="%23dp25"/></animateMotion></circle><circle r="1.5" fill="%23dffaff" fill-opacity="0.55"><animateMotion dur="9.0s" begin="1.92s" repeatCount="indefinite"><mpath href="%23dp26"/></animateMotion></circle></svg>');
+ background-size: 145% 145%; background-repeat: no-repeat;
+ animation: meshDrift 34s ease-in-out infinite;
+}
+@keyframes meshDrift {
+ 0%, 100% { background-position: 0% 0%; }
+ 50% { background-position: 22% 18%; }
+}
+.md-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.2em; color: var(--accent); text-transform: uppercase; display:flex; align-items:center; gap:8px; flex-shrink:0; white-space:nowrap; }
+.md-eyebrow i { color: var(--accent); }
+
+/* mobile-only status card: mirrors the topbar's rank/XP/streak inside every
+   dock, since on narrow screens that info moves off the topbar (which only
+   has room for the S.H.I.E.L.D. wordmark) and into the dock-toggle drawer */
+.dock-status { display: none; flex-direction: column; gap: 8px; margin-bottom: 14px; padding: 10px 12px; background: rgba(6,10,20,0.5); border: 1px solid var(--border-color); border-radius: var(--r-md); flex-shrink: 0; }
+.dock-status-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.dock-status-rank { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); white-space: nowrap; }
+.dock-status-rank b { font-family: var(--font-display); font-weight: 800; color: var(--accent); text-shadow: 0 0 8px var(--accent-glow); letter-spacing: 0.05em; text-transform: uppercase; }
+.dock-status-xpnum { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); white-space: nowrap; }
+.dock-status-xp-track { height: 6px; background: rgba(255,255,255,0.06); border-radius: 100px; overflow: hidden; border: 1px solid rgba(255,255,255,0.03); }
+.dock-status-xp-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #3f7fc7, var(--accent)); border-radius: 100px; box-shadow: 0 0 8px var(--accent-glow); transition: width 0.6s cubic-bezier(0.16,1,0.3,1); }
+.dock-status-streak { align-self: flex-start; font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; color: #ffd76b; background: rgba(232,207,134,0.08); border: 1px solid rgba(232,207,134,0.3); border-radius: 100px; padding: 5px 12px; }
+/* On Library/Cards/Quests the dock shows a drilled-in subtopic list. That
+   list can be short, so the panel shrinks to exactly its content height
+   instead of stretching down the full page. */
+.metrics-dock.fit-content { height: auto; align-self: flex-start; max-height: calc(100% - 24px); }
+.metrics-dock::-webkit-scrollbar { width: 0; height: 0; display: none; }
+.md-header-row { display:flex; align-items:center; gap:14px; margin-bottom:16px; flex-shrink:0; background: rgba(6,10,20,0.42); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--r-md); padding: 9px 12px; backdrop-filter: blur(6px); }
+.md-overall { display:flex; align-items:center; gap:9px; flex:1; min-width:0; }
+.md-overall-bar { flex:1; height:6px; background: rgba(255,255,255,0.07); border-radius:100px; overflow:hidden; border:1px solid rgba(255,255,255,0.03); }
+.md-overall-fill { display:block; height:100%; width:0%; background: linear-gradient(90deg, #3f7fc7, var(--accent)); border-radius:100px; box-shadow:0 0 9px var(--accent-glow); transition: width 0.6s cubic-bezier(0.16,1,0.3,1); }
+.md-overall-pct { font-family: var(--font-mono); font-size:12.5px; font-weight:700; color: var(--accent); flex-shrink:0; min-width:32px; text-align:right; }
+
+.md-activity-row { display:flex; align-items:center; gap:16px; margin-bottom:18px; flex-shrink:0; background: rgba(6,10,20,0.42); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--r-md); padding: 12px; backdrop-filter: blur(6px); }
+.donut-host-sm { width:112px; height:112px; flex-shrink:0; }
+.donut-host-sm svg { width:100%; height:100%; display:block; }
+.md-mastered { flex:1; min-width:0; }
+.md-mastered .big { font-family: var(--font-mono); font-size:19px; font-weight:600; color:var(--accent); line-height:1; }
+.md-mastered .sub { font-size:11px; color:var(--accent); margin-top:5px; font-weight:500; line-height:1.4; }
+
+/* margin-top:auto parks these at the bottom whenever the dock has room to
+   spare; when the content already fills it (or the dock is sized to its
+   content) they simply follow the list. */
+.md-callouts { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: auto; padding-top: 16px; flex: 0 0 auto; }
+.callout { background: rgba(9,14,27,0.62); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--r-md); padding: 11px 12px; min-height: 70px; backdrop-filter: blur(4px); }
+.callout .c-lbl { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; color: var(--rc, var(--text-muted)); text-transform: uppercase; display:flex; align-items:center; gap:5px; }
+.callout .c-val { font-size: 12.5px; font-weight: 700; color: var(--rc, #fff); margin-top: 7px; line-height: 1.3; display:flex; align-items:center; gap:6px; }
+.callout .c-val .dotc { display:inline-block; width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.callout .c-meta { font-family: var(--font-mono); font-size: 10px; color: var(--rc, var(--text-dim)); margin-top: 4px; }
+
+.md-section-title { font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: 0.04em; margin: 0 0 10px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.md-section-title .hint { font-size: 9px; color: var(--text-muted); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+
+/* The list always lays out at its full natural height — it never scrolls
+   inside its own little window, which is what stopped the panel from
+   growing with a long subtopic list. Any overflow is handled by the dock. */
+.md-topics-list { display:flex; flex-direction:column; gap:1px; overflow:visible; flex:0 0 auto; }
+.dock-back-row { display:flex; align-items:center; gap:8px; padding:8px; margin-bottom:6px; border-radius:var(--r-sm); cursor:pointer; color:var(--accent); font-size:11px; font-weight:700; transition:var(--transition); }
+.dock-back-row:hover { background: rgba(255,255,255,0.06); }
+.subtopic-row { display:flex; align-items:flex-start; gap:9px; padding:8px; border-radius:var(--r-sm); cursor:pointer; transition:var(--transition); border-left:3px solid transparent; background: rgba(6,10,20,0.32); }
+.subtopic-row:hover { background: rgba(255,255,255,0.07); transform: translateX(2px); }
+.subtopic-row.active { background: color-mix(in srgb, var(--rc, var(--accent)) 16%, transparent); border-left-color: var(--rc, var(--accent)); }
+.subtopic-check { margin-top:1px; width:16px; height:16px; border-radius:50%; border:1px solid rgba(255,255,255,0.15); display:inline-flex; align-items:center; justify-content:center; font-size:9.5px; color:var(--text-muted); flex-shrink:0; }
+.subtopic-check.done { background: rgba(69,212,154,0.18); border-color: var(--good); color: var(--good); box-shadow:0 0 8px rgba(69,212,154,0.25); }
+.subtopic-name { flex:1; font-size:11.5px; font-weight:600; color:#cbd5e1; line-height:1.4; }
+.subtopic-row.active .subtopic-name { color:#fff; }
+.subtopic-count { font-family:var(--font-mono); font-size:9.5px; color:var(--text-dim); flex-shrink:0; margin-top:2px; white-space:nowrap; }
+.region-row { display: flex; align-items: center; gap: 9px; padding: 6px 8px; border-radius: var(--r-sm); cursor: pointer; transition: var(--transition); border-left: 3px solid transparent; background: rgba(6,10,20,0.32); }
+.region-row:hover { background: rgba(255,255,255,0.07); transform: translateX(2px); }
+.region-row.active { background: color-mix(in srgb, var(--rc, var(--accent)) 16%, transparent); border-left-color: var(--rc, var(--accent)); box-shadow: 0 0 16px color-mix(in srgb, var(--rc, var(--accent)) 22%, transparent); }
+.region-row.active .region-name { color: #fff; }
+.region-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.region-name { font-size: 11px; font-weight: 600; color: #cbd5e1; width: 80px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.region-bar { flex: 1; min-width: 30px; height: 5px; background: rgba(255,255,255,0.06); border-radius: 100px; overflow: hidden; }
+.region-fill { display: block; height: 100%; border-radius: 100px; transition: width 0.6s cubic-bezier(0.16,1,0.3,1); }
+.region-val { font-family: var(--font-mono); font-size: 10px; color: var(--accent); width: 38px; text-align: right; flex-shrink: 0; }
+.donut-seg { cursor: pointer; transition: opacity 0.2s, stroke-width 0.2s; }
+.donut-seg:hover { opacity: 0.78; }
+
+.brain-area { flex: 1; position: relative; min-width: 0; }
+.map-wrap { width: 100%; height: 100%; position: relative; }
+/* ===== HOLOGRAM EMITTER (replaces the old corner-bracket HUD frame) =====
+   Small projector device drawn inside the map SVG, directly under the YOU
+   node — the design story: the brain map is a hologram beamed out of this
+   device. It lives in the same SVG coordinate space as the brain, so it
+   scales and moves with it automatically in every view. Built in buildMap(). */
+.holo-pulse { transform-box: fill-box; transform-origin: center; animation: holoPulse 4.8s ease-out infinite; }
+@keyframes holoPulse {
+ 0%   { transform: scale(1);    opacity: 0.45; }
+ 70%  { transform: scale(1.75); opacity: 0; }
+ 100% { transform: scale(1.75); opacity: 0; }
+}
+#mapSvg { width: 100%; height: 100%; display: block; }
+.dock-toggle { display: none; }
+.dock-close { display: none; }
+
+.node-g { cursor: pointer; }
+.node-glow { transition: opacity 0.5s ease, r 0.5s ease; }
+.axon { transition: stroke-opacity 0.25s ease, stroke-width 0.25s ease; }
+.axon.lit { stroke-opacity: 0.65 !important; stroke-width: 2 !important; }
+.node-hit { fill: #fff; opacity: 0; transition: opacity 0.2s; }
+.node-g:hover .node-hit { opacity: 0.05; }
+.node-g:hover .node-label { fill: #fff !important; }
+
+@media (prefers-reduced-motion: reduce) {
+ .pulse, .breathe { animation: none !important; }
+ .ambient::before, .ambient::after { animation: none !important; }
+ .holo-pulse { animation: none !important; opacity: 0 !important; }
+}
+.breathe { animation: breathe 5.5s ease-in-out infinite; }
+@keyframes breathe { 0%,100% { opacity: 0.45; } 50% { opacity: 0.85; } }
+
+/* ===== READER / DETAIL PANEL (wider) ===== */
+.cpanel {
+ position: absolute; right: 18px; top: 18px; height: calc(100% - 36px);
+ width: clamp(480px, 85%, 1440px); max-width: calc(100% - 36px);
+ background: linear-gradient(180deg, rgba(12, 19, 38, 0.9), rgba(9, 14, 28, 0.86)); backdrop-filter: blur(22px);
+ border: 1px solid var(--border-color); border-radius: var(--r-lg);
+ border-left: 3px solid var(--panel-accent, var(--border-color));
+ display: flex; flex-direction: column;
+ transform: translateX(calc(100% + 40px)); transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1), border-left-color 0.3s ease;
+ z-index: 50; box-shadow: 0 24px 60px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.cpanel.open { transform: translateX(0); }
+.cp-head { padding: 20px 26px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 13px; }
+.cp-dot { width: 11px; height: 11px; border-radius: 50%; box-shadow: 0 0 12px currentColor; }
+.cp-title { font-size: 16px; font-weight: 700; color: #fff; flex: 1; letter-spacing: 0.01em; }
+.cp-close { background: rgba(255,255,255,0.05); border: none; border-radius: 50%; cursor: pointer; color: var(--text-dim); width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; transition: var(--transition); font-size: 14px; }
+.cp-close:hover { background: rgba(255,255,255,0.12); color: #fff; transform: rotate(90deg); }
+
+.cp-tabs { display: flex; border-bottom: 1px solid rgba(255,255,255,0.06); padding: 0 14px; }
+.cp-tab { flex: 1; padding: 13px 4px; font-size: 11px; font-weight: 700; color: var(--text-muted); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: var(--transition); text-transform: uppercase; letter-spacing: 0.06em; }
+.cp-tab:hover { color: var(--text-main); }
+.cp-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.prog-wrap { padding: 16px 26px 0; }
+.prog-row { display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; color: var(--text-dim); margin-bottom: 7px; }
+.prog-row span:last-child { font-family: var(--font-mono); }
+.prog-bar { height: 5px; background: rgba(255,255,255,0.06); border-radius: 100px; overflow: hidden; }
+.prog-fill { height: 100%; border-radius: 100px; transition: width 0.5s ease; }
+.cp-body { flex: 1; overflow-y: auto; padding: 22px 26px; }
+
+.cc { background: var(--bg-surface); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: var(--r-md); padding: 18px 16px 16px; margin-bottom: 11px; cursor: pointer; transition: var(--transition); position: relative; overflow: hidden; }
+.cc::before { content:''; position:absolute; left:0; right:0; top:0; height:3px; background: var(--cc-accent, var(--accent)); box-shadow: 0 0 10px var(--cc-accent, var(--accent)); opacity:0.85; transition: var(--transition); }
+.cc:hover { border-color: var(--border-hover); background: var(--bg-surface-glow); transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0,0,0,0.25); }
+.cc:hover::before { opacity: 1; height:4px; }
+.cc-title { font-size: 13.5px; color: #fff; font-weight: 600; line-height: 1.5; }
+.cc-meta { font-size: 11px; color: var(--text-dim); margin-top: 7px; display: flex; align-items: center; gap: 6px; }
+.cc-subcat { font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; margin-top: 7px; opacity: 0.92; }
+.cc-done { float: right; width: 19px; height: 19px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15); display: inline-flex; align-items: center; justify-content: center; font-size: 10px; color: var(--text-muted); margin-left: 8px; transition: var(--transition); }
+.cc-done.done { background: rgba(69, 212, 154, 0.16); border-color: var(--good); color: var(--good); box-shadow: 0 0 10px rgba(69,212,154,0.25); }
+
+/* library filter bar: topic pills only now — subtopic filtering lives in the
+   sidebar dock's drill-down list, so the dropdown here was dropped */
+.lib-filterbar {
+ display: flex; flex-direction: column; gap: 12px; margin: 0 0 20px; padding: 14px 18px 15px; flex-shrink: 0;
+ background: rgba(7, 11, 22, 0.7); backdrop-filter: blur(14px);
+ border: 1px solid var(--border-color);
+ clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+ box-shadow: 0 0 16px rgba(125,214,232,0.10), inset 0 0 12px rgba(125,214,232,0.05);
+}
+.lib-filterbar-row { display: flex; align-items: stretch; gap: 12px; }
+/* fixed 5-column grid: 10 buttons (All Topics + 9 topics) split evenly into
+   two rows of 5, filling the width up to where the view toggle starts */
+.lib-topic-filters { display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px; flex: 1; min-width: 0; }
+.lib-topic-filters::-webkit-scrollbar { display: none; }
+.lib-tpill {
+ flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 8px 12px; border-radius: var(--r-md);
+ color: var(--text-dim); font-size: 12px; font-weight: 700; font-family: inherit; cursor: pointer; transition: var(--transition); position: relative; white-space: nowrap; overflow: hidden;
+ border: 1px solid color-mix(in srgb, var(--tc, var(--accent)) 24%, rgba(255,255,255,0.08));
+ background: linear-gradient(180deg, color-mix(in srgb, var(--tc, var(--accent)) 10%, rgba(24,36,60,0.85)) 0%, rgba(9,14,27,0.8) 100%);
+ box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -6px 10px -8px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3), 0 0 6px color-mix(in srgb, var(--tc, var(--accent)) 14%, transparent);
+}
+.lib-tpill-icon { width: 18px; height: 18px; border-radius: 50%; background: color-mix(in srgb, var(--tc, var(--accent)) 16%, transparent); border: 1px solid color-mix(in srgb, var(--tc, var(--accent)) 55%, transparent); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--tc, var(--accent)); }
+.lib-tpill-icon svg { width: 11px; height: 11px; display: block; }
+.lib-tpill-icon i { width: 11px !important; height: 11px !important; }
+.lib-tpill::after {
+ content: ''; position: absolute; left: 12px; right: 12px; bottom: 4px; height: 2px; border-radius: 100px;
+ background: var(--tc, var(--accent)); opacity: 0.55; box-shadow: 0 0 6px color-mix(in srgb, var(--tc, var(--accent)) 70%, transparent);
+}
+.lib-tpill:hover { border-color: color-mix(in srgb, var(--tc, var(--accent)) 55%, transparent); color: #fff; transform: translateY(-1px); }
+.lib-tpill.active {
+ border-color: var(--tc, var(--accent)); color: #fff;
+ background: linear-gradient(180deg, color-mix(in srgb, var(--tc, var(--accent)) 22%, rgba(24,36,60,0.85)) 0%, rgba(9,14,27,0.85) 100%);
+ box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -6px 10px -8px rgba(0,0,0,0.5), 0 0 16px color-mix(in srgb, var(--tc, var(--accent)) 32%, transparent);
+}
+.lib-tpill.active::after { opacity: 1; height: 2.5px; }
+
+/* ===== SERVICES PAGE (Phase 5) ===== */
+.svc-wrap { padding: 36px; max-width: 1180px; margin: 0 auto; height: 100%; overflow-y: auto; }
+.svc-hero { margin-bottom: 38px; }
+.svc-hero-art { width: 100%; max-width: 560px; height: auto; display: block; margin-bottom: 18px; }
+.svc-hero h1 { font-size: 24px; font-weight: 800; color: #fff; letter-spacing: 0.01em; margin-bottom: 10px; }
+.svc-hero p { font-size: 13.5px; color: var(--text-dim); max-width: 640px; line-height: 1.6; }
+.svc-groups { display: flex; flex-direction: column; gap: 38px; }
+.svc-group-head { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.svc-group-icon { font-size: 19px; line-height: 1; }
+.svc-group-title { font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #fff; }
+.svc-group-head::after { content: ''; flex: 1; height: 2px; background: var(--sc-accent, var(--accent)); opacity: 0.5; border-radius: 100px; margin-left: 4px; }
+.svc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+.svc-card { background: var(--bg-surface); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--r-md); padding: 18px 16px 16px; position: relative; overflow: hidden; transition: var(--transition); }
+.svc-card::before { content:''; position: absolute; left:0; right:0; top:0; height:3px; background: var(--sc-accent, var(--accent)); box-shadow: 0 0 10px var(--sc-accent, var(--accent)); opacity: 0.85; }
+.svc-card:hover { transform: translateY(-2px); border-color: var(--border-hover); background: var(--bg-surface-glow); box-shadow: 0 10px 24px rgba(0,0,0,0.25); }
+.svc-emoji { font-size: 24px; display: block; margin-bottom: 10px; }
+.svc-name { font-size: 13.5px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+.svc-desc { font-size: 11.5px; color: var(--text-dim); line-height: 1.55; }
+
+.sub-pills { padding: 4px 0 16px; display: flex; flex-wrap: wrap; gap: 7px; }
+.lib-subcat-select { align-self: flex-start; background: #0e1526; border: 1px solid var(--border-color); border-radius: var(--r-sm); color: #fff; font-family: inherit; font-size: 12.5px; font-weight: 600; padding: 9px 14px; cursor: pointer; transition: var(--transition); min-width: 220px; }
+.lib-subcat-select:hover, .lib-subcat-select:focus { border-color: var(--border-hover); }
+.lib-subcat-select option { background: #0e1526; color: #fff; }
+
+.lib-wrap { padding: 18px 32px 22px; max-width: 1280px; margin: 0 auto; }
+.lib-topic-block { margin-bottom: 32px; }
+.lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 15px; }
+
+/* item-map: map-page-style node network used inside Library/Flashcards/Challenges topic blocks */
+.item-map {
+ width: 100%; margin: 0 0 14px; padding: 16px 14px 10px; position: relative; overflow: hidden;
+ border: 1px solid rgba(127, 230, 255, 0.16); border-radius: var(--r-lg);
+ background: radial-gradient(ellipse at 42% 30%, rgba(36,64,98,0.34), rgba(14,28,50,0.22));
+ box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+}
+/* list mode swaps the pannable network for a plain scrollable card grid —
+   nothing to clip or transform here, so let it size normally */
+.item-map.list-mode { overflow: visible; }
+/* topic title now lives inside the map box itself, as a small floating badge,
+   instead of a separate header row above it */
+.im-badge { position: absolute; top: 14px; left: 16px; z-index: 3; display: flex; align-items: center; gap: 9px; padding: 6px 13px 6px 6px; background: rgba(8,13,26,0.74); border: 1px solid color-mix(in srgb, var(--tc, var(--accent)) 45%, transparent); border-radius: 100px; backdrop-filter: blur(8px); box-shadow: 0 0 14px color-mix(in srgb, var(--tc, var(--accent)) 20%, transparent); }
+/* same chip, but in normal flow above the list instead of floating over the svg */
+.lib-list-header { display: inline-flex; align-items: center; gap: 9px; padding: 6px 13px 6px 6px; background: rgba(8,13,26,0.74); border: 1px solid color-mix(in srgb, var(--tc, var(--accent)) 45%, transparent); border-radius: 100px; margin-bottom: 16px; box-shadow: 0 0 14px color-mix(in srgb, var(--tc, var(--accent)) 20%, transparent); }
+.im-badge-icon { width: 24px; height: 24px; border-radius: 50%; background: color-mix(in srgb, var(--tc, var(--accent)) 18%, transparent); border: 1px solid var(--tc, var(--accent)); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.im-badge-icon svg { width: 15px; height: 15px; display: block; }
+.im-badge-name { font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.01em; white-space: nowrap; }
+.im-badge-count { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); white-space: nowrap; }
+/* pan/zoom controls — small buttons, always available, most useful on phones
+   where the node network is otherwise too dense to read comfortably */
+.im-zoom-controls { position: absolute; top: 14px; right: 14px; z-index: 4; display: flex; flex-direction: column; gap: 5px; }
+.im-zoom-btn { width: 27px; height: 27px; border-radius: 8px; background: rgba(8,13,26,0.76); border: 1px solid rgba(127,230,255,0.28); color: var(--accent); font-size: 15px; font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(6px); transition: var(--transition); padding: 0; }
+.im-zoom-btn:hover { background: rgba(125,214,232,0.18); border-color: var(--accent); }
+.im-zoom-btn.active { background: var(--accent); border-color: var(--accent); color: #061018; box-shadow: 0 0 10px var(--accent-glow); }
+.item-map-svg { width: 100%; height: auto; display: block; overflow: visible; transform-origin: center center; transition: transform 0.08s ease-out; touch-action: pan-y; }
+.im-axon { transition: stroke-opacity 0.25s ease, stroke-width 0.25s ease; }
+.im-axon.lit { stroke-opacity: 0.75 !important; stroke-width: 1.8 !important; }
+.im-node { cursor: pointer; }
+.im-node circle, .im-node text { transition: var(--transition); }
+.im-node:hover circle:nth-of-type(2) { filter: drop-shadow(0 0 12px var(--tc, var(--accent))); }
+.im-node:hover text { fill: #fff !important; }
+.im-center { pointer-events: none; }
+/* mobile-only inline Status button, lives inside the filter bar on
+   Library/Cards/Challenges — desktop never shows it (the dock is always
+   visible there already) */
+.lib-status-btn { display: none; }
+/* map/list view toggle, sits at the end of the topic-pill row */
+/* view toggle: same size/shape as the topic pills so the whole bar reads as
+   one unified control row; the accent border marks it as an action */
+.lib-view-toggle {
+ display: flex; flex-direction: column; flex-shrink: 0; min-width: 128px;
+ border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--border-color);
+ background: rgba(9,14,27,0.7);
+}
+.lib-view-seg {
+ flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
+ font-size: 11.5px; font-weight: 700; font-family: inherit; color: var(--text-muted);
+ background: transparent; border: none; cursor: pointer; transition: var(--transition); position: relative;
+}
+.lib-view-seg:first-child { border-bottom: 1px solid var(--border-color); }
+.lib-view-seg:hover:not(.active) { color: #fff; background: rgba(255,255,255,0.04); }
+.lib-view-seg.active {
+ color: #fff;
+ background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 26%, rgba(24,36,60,0.9)) 0%, rgba(9,14,27,0.88) 100%);
+ box-shadow: inset 0 0 16px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.lib-view-seg.active i { color: var(--accent); filter: drop-shadow(0 0 6px var(--accent-glow)); }
+.lib-view-seg::after {
+ content: ''; position: absolute; left: 14px; right: 14px; bottom: 4px; height: 2px; border-radius: 100px;
+ background: var(--accent); opacity: 0; transition: var(--transition); box-shadow: 0 0 8px var(--accent-glow);
+}
+.lib-view-seg.active::after { opacity: 0.85; }
+.linked-block { margin-top: 24px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 11px; }
+.linked-head { font-size: 10px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-dim); display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+.linked-btn { display: flex; align-items: center; gap: 13px; width: 100%; text-align: left; background: var(--bg-surface); border: 1px solid rgba(255,255,255,0.07); border-left: 3px solid var(--lk, var(--accent)); border-radius: var(--r-md); padding: 14px 16px; cursor: pointer; color: var(--text-main); font-family: inherit; transition: var(--transition); }
+.linked-btn:hover { border-color: var(--lk, var(--accent)); background: var(--bg-surface-glow); transform: translateX(3px); }
+.linked-btn > i:first-child { width: 20px; height: 20px; color: var(--lk, var(--accent)); flex-shrink: 0; }
+.linked-btn .lk-txt { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.linked-btn .lk-t { font-size: 13px; font-weight: 700; color: #fff; }
+.linked-btn .lk-s { font-size: 11px; color: var(--text-dim); }
+.lk-arrow { width: 16px; height: 16px; color: var(--text-dim); flex-shrink: 0; }
+
+.diary-layout { display: grid; grid-template-columns: 420px 1fr; height: 100%; background: rgba(0,0,0,0.1); }
+.diary-composer { padding: 34px; border-right: 1px solid var(--border-color); background: rgba(8, 12, 24, 0.4); backdrop-filter: blur(10px); display: flex; flex-direction: column; gap: 16px; }
+.diary-composer h2 { font-size: 19px; font-weight: 700; color: var(--c-diary); display: flex; align-items: center; gap: 9px; }
+.diary-textarea { width: 100%; background: rgba(0,0,0,0.25); border: 1px solid rgba(224, 140, 200, 0.22); border-radius: var(--r-md); padding: 16px; font-size: 13px; color: #f1f5f9; font-family: inherit; line-height: 1.6; resize: none; outline: none; transition: var(--transition); }
+.diary-textarea:focus { border-color: rgba(224, 140, 200, 0.6); box-shadow: 0 0 16px rgba(224, 140, 200, 0.15); }
+.diary-foot { display: flex; flex-direction: column; gap: 14px; }
+.mood-group { display: flex; flex-wrap: wrap; gap: 7px; }
+.mood-btn { padding: 6px 13px; border-radius: 100px; border: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.02); font-size: 12px; color: var(--text-dim); cursor: pointer; transition: var(--transition); font-weight: 500; }
+.mood-btn:hover, .mood-btn.sel { background: rgba(224, 140, 200, 0.12); border-color: rgba(224, 140, 200, 0.5); color: var(--c-diary); }
+.diary-actions { display: flex; gap: 10px; width: 100%; }
+.diary-save { flex: 1; padding: 11px; border-radius: var(--r-sm); background: rgba(224, 140, 200, 0.2); color: #fff; border: 1px solid rgba(224, 140, 200, 0.45); font-size: 12px; font-weight: 700; cursor: pointer; transition: var(--transition); }
+.diary-save:hover { background: rgba(224, 140, 200, 0.32); transform: translateY(-1px); }
+.diary-ai-btn { padding: 11px 14px; border-radius: var(--r-sm); background: rgba(125, 214, 232, 0.1); color: var(--accent); border: 1px solid var(--border-color); cursor: pointer; transition: var(--transition); display: flex; align-items: center; justify-content: center; }
+.diary-ai-btn:hover { background: rgba(125, 214, 232, 0.2); border-color: var(--accent); }
+
+.diary-entries { padding: 34px; overflow-y: auto; }
+.diary-entry { background: var(--bg-surface); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--r-md); padding: 20px; margin-bottom: 12px; transition: var(--transition); }
+.diary-entry:hover { border-color: rgba(255,255,255,0.1); background: var(--bg-surface-glow); }
+.de-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.de-date { font-size: 11px; color: var(--text-dim); font-weight: 600; }
+.de-text { font-size: 13px; color: #cbd5e1; line-height: 1.6; white-space: pre-wrap; }
+.de-mood { font-size: 11px; padding: 3px 11px; border-radius: 100px; background: rgba(224,140,200,0.09); color: var(--c-diary); border: 1px solid rgba(224,140,200,0.22); font-weight: 600; }
+
+.ai-insight-box { margin-top: 12px; padding: 12px; background: rgba(125, 214, 232, 0.04); border: 1px dashed rgba(125, 214, 232, 0.3); border-radius: var(--r-sm); font-size: 11px; color: var(--accent); line-height: 1.5; display: flex; gap: 8px; align-items: flex-start; animation: fadeIn 0.3s ease; }
+
+.fc-card { background: var(--bg-surface); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--r-md); padding: 22px; cursor: pointer; margin-bottom: 11px; min-height: 92px; display: flex; flex-direction: column; justify-content: center; transition: var(--transition); }
+.fc-card:hover { border-color: var(--accent); transform: scale(1.01); box-shadow: 0 0 16px rgba(125,214,232,0.12); }
+.fc-front { font-size: 13.5px; color: var(--accent); font-weight: 600; }
+.fc-back { font-size: 12.5px; color: #cbd5e1; line-height: 1.6; margin-top: 12px; display: none; border-top: 1px solid rgba(255,255,255,0.07); padding-top: 12px; }
+.fc-card.flipped .fc-back { display: block; }
+.fc-hint { font-size: 10px; color: var(--text-muted); margin-top: 8px; text-align: right; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; }
+
+.article-reader { background: rgba(0,0,0,0.2); border-radius: var(--r-md); padding: 26px; border: 1px solid rgba(255,255,255,0.05); }
+.article-reader h1 { font-size: 21px; color: #fff; font-weight: 700; margin-bottom: 16px; }
+.article-reader h2 { font-size: 16px; color: var(--accent); font-weight: 700; margin: 18px 0 10px; }
+.article-reader h3 { font-size: 14px; color: #cbd5e1; font-weight: 700; margin: 14px 0 8px; }
+.article-reader p { font-size: 13.5px; color: #a8b5c4; line-height: 1.78; margin-bottom: 13px; }
+.article-reader ul { margin: 0 0 13px 18px; } .article-reader li { font-size: 13.5px; color: #a8b5c4; line-height: 1.7; margin-bottom: 5px; }
+.article-reader strong { color: #e7eef5; } .article-reader em { color: var(--accent); font-style: normal; }
+.article-reader blockquote { border-left: 3px solid var(--accent); margin: 0 0 14px; padding: 9px 16px; background: rgba(125,214,232,0.06); color: #9fb3c8; font-style: italic; border-radius: 0 8px 8px 0; font-size: 13.5px; line-height: 1.7; }
+.article-reader ol { margin: 0 0 13px 20px; } .article-reader ol li { font-size: 13.5px; color: #a8b5c4; line-height: 1.7; margin-bottom: 6px; }
+.article-reader hr { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 20px 0; }
+.article-reader img { max-width: 100%; border-radius: 10px; margin: 10px 0; display: block; }
+.article-reader code { background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 5px; font-family: var(--font-mono); font-size: 12.5px; color: var(--accent); }
+.ch-scenario blockquote { border-left: 3px solid var(--c-challenges); margin: 0 0 10px; padding: 7px 14px; background: rgba(255,92,138,0.06); color: #cdd8e6; font-style: italic; border-radius: 0 8px 8px 0; }
+.ch-scenario ol, .ch-scenario ul { margin: 0 0 10px 20px; } .ch-scenario li { font-size: 14px; color: #cdd8e6; line-height: 1.6; margin-bottom: 4px; }
+.back-btn { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-main); border-radius: var(--r-sm); padding: 7px 15px; font-size: 11px; font-weight: 600; cursor: pointer; margin-bottom: 18px; display: inline-flex; align-items: center; gap: 6px; transition: var(--transition); }
+.back-btn:hover { background: rgba(255,255,255,0.1); color: var(--accent); }
+
+/* ===== Challenge / Quest ===== */
+.ch-scenario-label, .ch-prompt { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--c-challenges); font-weight: 600; margin-bottom: 10px; }
+.ch-prompt { margin: 22px 0 12px; color: var(--text-dim); }
+.ch-scenario { background: rgba(255,92,138,0.05); border: 1px solid rgba(255,92,138,0.16); border-radius: var(--r-md); padding: 18px 20px; }
+.ch-scenario p { font-size: 14px; color: #cdd8e6; line-height: 1.75; margin-bottom: 10px; }
+.ch-scenario p:last-child { margin-bottom: 0; }
+.ch-scenario strong { color: #fff; } .ch-scenario em { color: var(--c-challenges); font-style: normal; }
+.ch-scenario h2,.ch-scenario h3 { color:#fff; font-size:15px; margin:12px 0 8px; }
+.ch-options { display: flex; flex-direction: column; gap: 10px; }
+.ch-opt { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px; width: 100%; text-align: left; background: var(--bg-surface); border: 1px solid rgba(255,255,255,0.07); border-radius: var(--r-md); padding: 15px 16px; cursor: pointer; transition: var(--transition); color: var(--text-main); font-family: inherit; }
+.ch-opt:not(.locked):hover { border-color: var(--c-challenges); transform: translateY(-1px); }
+.ch-opt.locked { cursor: default; }
+.ch-opt-letter { flex-shrink: 0; width: 26px; height: 26px; border-radius: 8px; background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-weight: 600; font-size: 13px; color: var(--text-dim); }
+.ch-opt-text { flex: 1; font-size: 13.5px; line-height: 1.5; padding-top: 3px; }
+.ch-opt-fb { flex-basis: 100%; font-size: 12.5px; line-height: 1.6; color: var(--text-dim); margin-top: 4px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.1); display: none; }
+.ch-opt.revealed .ch-opt-fb { display: block; }
+.ch-opt.correct { border-color: rgba(69,212,154,0.55); background: rgba(69,212,154,0.07); }
+.ch-opt.correct .ch-opt-letter { background: rgba(69,212,154,0.2); color: var(--good); }
+.ch-opt.wrong { border-color: rgba(255,92,138,0.5); background: rgba(255,92,138,0.06); }
+.ch-opt.wrong .ch-opt-letter { background: rgba(255,92,138,0.2); color: var(--c-challenges); }
+.ch-opt.chosen { box-shadow: 0 0 0 1px rgba(255,255,255,0.14); }
+.ch-result { margin-top: 18px; padding: 14px 16px; border-radius: var(--r-md); font-size: 13px; font-weight: 600; line-height: 1.6; display: none; }
+.ch-result.show { display: block; }
+.ch-result.win { background: rgba(69,212,154,0.1); border: 1px solid rgba(69,212,154,0.3); color: var(--good); }
+.ch-result.miss { background: rgba(255,92,138,0.08); border: 1px solid rgba(255,92,138,0.3); color: #ff86a8; }
+
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.09); border-radius: 100px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+.loading, .empty { text-align: center; padding: 44px; font-size: 13px; color: var(--text-dim); font-weight: 500; }
+
+@media (max-width: 920px) {
+ /* full-page overlay: absolutely fills the page area (which the flex layout
+    already sizes correctly), so it can never be clipped or offset by mobile
+    browser chrome the way a fixed pixel top would be */
+ .metrics-dock { position: absolute; inset: 0; width: 100%; margin: 0; height: auto; border-radius: 0; transform: translateX(-100%); transition: transform 0.35s cubic-bezier(0.16,1,0.3,1); box-shadow: 0 0 44px rgba(0,0,0,0.6); z-index: 150; }
+ /* mobile: the panel is a full-page overlay, so let the whole thing scroll
+    and give every topic row its natural height */
+ .metrics-dock { overflow-y: auto; overflow-x: hidden; }
+ .md-topics-list { flex: 0 0 auto; overflow: visible; }
+ .metrics-dock.fit-content { height: auto; inset: 0 0 auto 0; max-height: 100%; }
+ .metrics-dock.open { transform: translateX(0); }
+ .dock-toggle { display: inline-flex; position: absolute; left: 14px; top: 14px; z-index: 60; align-items:center; gap:7px; background: rgba(10,17,34,0.88); border: 1px solid var(--border-color); color: var(--accent); border-radius: 100px; padding: 9px 15px; font-size: 11px; font-weight: 700; cursor: pointer; backdrop-filter: blur(10px); }
+ .dock-close { display: flex; position: absolute; top: 12px; right: 12px; z-index: 65; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: rgba(10,17,34,0.88); border: 1px solid var(--border-color); color: var(--text-dim); cursor: pointer; backdrop-filter: blur(10px); transition: var(--transition); }
+ .dock-close:hover { color: #fff; border-color: var(--border-hover); }
+ .cpanel { width: calc(100% - 28px); right: 14px; }
+ .diary-layout { grid-template-columns: 1fr; overflow-y: auto; }
+ .diary-composer { border-right: none; border-bottom: 1px solid var(--border-color); }
+ /* topbar: tighter spacing; the wordmark stays visible and the rank/XP/streak
+    card turns into a dropdown in the top-right corner, opened from the
+    compact Lv pill (.xp-mini) */
+ .topbar { padding: 0 14px; gap: 12px; }
+ .xp-mini { display: inline-flex; }
+ .xp-group {
+   position: absolute; top: calc(100% + 8px); right: 10px; margin-left: 0;
+   flex-direction: column; align-items: stretch; gap: 10px;
+   background: rgba(10,16,32,0.97); border: 1px solid var(--border-color);
+   border-radius: var(--r-md); padding: 12px 14px;
+   box-shadow: 0 18px 40px rgba(0,0,0,0.55); backdrop-filter: blur(14px);
+   opacity: 0; pointer-events: none; transform: translateY(-6px);
+   transition: opacity 0.22s ease, transform 0.22s ease; z-index: 120;
+ }
+ .xp-group.open { opacity: 1; pointer-events: auto; transform: translateY(0); }
+ .xp-group .streak { align-self: flex-start; }
+ /* the dock drawers still mirror the same status card */
+ .dock-status { display: flex; }
+ /* Library/Cards/Challenges: Status + view toggle split the first row 50/50,
+    both styled like the topic pills; topic pills below become a 2-column
+    grid (2 across x 5 rows) so the topic names actually fit. Content still
+    replaces the whole bar in reader view, so the Status button disappears
+    there too. */
+ .lib-wrap { padding: 10px 8px 20px; }
+ .lib-filterbar { padding: 12px 12px 13px; }
+ .lib-filterbar-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+ /* Status button: same 3D-bevel look as the topic pills, sized to fill its
+    half of the top row */
+ .lib-status-btn {
+   display: inline-flex; align-items: center; justify-content: center; gap: 7px; width: 100%; order: 1;
+   padding: 0 12px; border-radius: var(--r-md); color: #fff; font-size: 11px; font-weight: 700; cursor: pointer; position: relative;
+   border: 1px solid color-mix(in srgb, var(--accent) 40%, rgba(255,255,255,0.08));
+   background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 14%, rgba(24,36,60,0.85)) 0%, rgba(9,14,27,0.8) 100%);
+   box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -6px 10px -8px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3);
+ }
+ .lib-status-btn i { color: var(--accent); }
+ .lib-status-btn::after { content:''; position:absolute; left:14px; right:14px; bottom:4px; height:2px; border-radius:100px; background:var(--accent); opacity:0.6; box-shadow:0 0 6px var(--accent-glow); }
+ .lib-view-toggle { order: 2; margin-left: 0; width: 100%; min-width: 0; flex-direction: row; }
+ .lib-view-seg { font-size: 10px; padding: 8px 4px; }
+ .lib-view-seg:first-child { border-bottom: none; border-right: 1px solid var(--border-color); }
+ .lib-topic-filters { display: grid; grid-template-columns: 1fr 1fr; flex: none; order: 3; grid-column: 1 / -1; gap: 7px; }
+ .lib-tpill { padding: 8px 10px; font-size: 11px; gap: 7px; min-width: 0; justify-content: flex-start; }
+ .lib-tpill span:last-child { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+ /* item-map boxes and the article/flashcard/quest reader: shave the padding
+    down so the map and the reading text actually use the narrow screen's
+    width instead of leaving big unused margins on both sides */
+ .item-map { padding: 10px 6px 6px; }
+ .article-reader { padding: 14px; }
+ /* icon bar: keep every nav button reachable via horizontal swipe instead of
+    squeezing six buttons into one narrow row */
+ .iconbar { justify-content: flex-start; overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 8px 12px; padding: 0 14px; }
+ .iconbar::-webkit-scrollbar { display: none; }
+ .ib-btn { min-width: 74px; padding: 8px 13px 11px; flex-shrink: 0; }
+ .ib-btn span { font-size: 9px; }
+}
+@media (max-width: 560px) {
+ /* keep the S.H.I.E.L.D. wordmark on phones too, just more compact */
+ .brand-text-box { padding: 5px 10px 5px 9px; }
+ .brand-name { font-size: 13px; letter-spacing: 0.12em; }
+}
+/* ═══ in-app notifications: welcome / level-up / topic-mastery ═══ */
+.notif-overlay{position:fixed;inset:0;z-index:400;display:none;align-items:center;justify-content:center;padding:24px;
+ background:radial-gradient(700px 420px at 50% 0%, rgba(43,140,220,0.12), transparent 62%), rgba(4,7,13,0.82);backdrop-filter:blur(6px)}
+.notif-overlay.open{display:flex;animation:notifFade .3s ease both}
+@keyframes notifFade{from{opacity:0}to{opacity:1}}
+.notif{position:relative;width:100%;max-width:560px;max-height:calc(100dvh - 48px);overflow-y:auto;
+ background:linear-gradient(180deg, rgba(13,21,40,0.97), rgba(9,14,28,0.98));
+ border:1px solid color-mix(in srgb, var(--nc, var(--accent)) 42%, transparent);border-radius:var(--r-lg);
+ box-shadow:0 30px 80px rgba(0,0,0,0.6), 0 0 40px color-mix(in srgb, var(--nc, var(--accent)) 16%, transparent);
+ animation:notifIn .5s cubic-bezier(0.16,1,0.3,1) both}
+@keyframes notifIn{from{opacity:0;transform:translateY(18px) scale(0.97)}to{opacity:1;transform:none}}
+.notif::before{content:'';position:absolute;left:0;top:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--nc,var(--accent)),transparent);opacity:.9}
+.notif::-webkit-scrollbar{width:5px}.notif::-webkit-scrollbar-thumb{background:rgba(125,214,232,0.2);border-radius:3px}
+.notif-glow{position:absolute;inset:0;pointer-events:none;z-index:0;opacity:.5;border-radius:var(--r-lg);
+ background:radial-gradient(280px 150px at 50% 0%, color-mix(in srgb, var(--nc, var(--accent)) 22%, transparent), transparent 70%)}
+.notif-inner{position:relative;z-index:1;padding:34px 32px 28px}
+.notif-close{position:absolute;top:14px;right:14px;z-index:5;width:30px;height:30px;border-radius:50%;
+ display:flex;align-items:center;justify-content:center;cursor:pointer;transition:var(--transition);
+ background:rgba(10,17,34,0.8);border:1px solid var(--border-color);color:var(--text-dim)}
+.notif-close:hover{color:#fff;border-color:var(--border-hover)}
+.notif-kicker{display:inline-flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:10.5px;font-weight:600;
+ letter-spacing:.18em;text-transform:uppercase;color:var(--nc,var(--accent));padding:5px 12px;border-radius:100px;
+ border:1px solid color-mix(in srgb, var(--nc, var(--accent)) 40%, transparent);background:color-mix(in srgb, var(--nc, var(--accent)) 10%, transparent);margin-bottom:18px}
+.notif-kicker i{width:13px;height:13px}
+.notif .emblem{width:78px;height:78px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:18px;position:relative;
+ background:color-mix(in srgb, var(--nc, var(--accent)) 14%, #070c18);border:2px solid var(--nc,var(--accent));
+ box-shadow:0 0 26px color-mix(in srgb, var(--nc, var(--accent)) 34%, transparent), inset 0 0 18px color-mix(in srgb, var(--nc, var(--accent)) 14%, transparent)}
+.notif .emblem i, .notif .emblem svg{width:36px;height:36px;color:var(--nc,var(--accent));filter:drop-shadow(0 0 8px color-mix(in srgb, var(--nc, var(--accent)) 60%, transparent))}
+.notif .emblem::after{content:'';position:absolute;inset:-9px;border-radius:50%;border:1px solid color-mix(in srgb, var(--nc, var(--accent)) 30%, transparent);animation:nRing 3.4s ease-in-out infinite}
+@keyframes nRing{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.08);opacity:.15}}
+.notif h1{font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:.01em;line-height:1.2;margin-bottom:6px;color:#fff}
+.notif .rank-line{font-family:var(--font-mono);font-size:12px;color:var(--nc,var(--accent));letter-spacing:.06em;margin-bottom:16px}
+.notif h2{font-size:15px;font-weight:700;color:var(--nc,var(--accent));margin:2px 0 14px;line-height:1.3}
+.notif p{font-size:13.5px;color:#b7c4d4;line-height:1.75;margin-bottom:13px}
+.notif p:last-of-type{margin-bottom:0}
+.notif strong{color:#e7eef5;font-weight:700}
+.notif em{color:var(--nc,var(--accent));font-style:normal;font-weight:600}
+.notif blockquote{border-left:3px solid var(--nc,var(--accent));margin:0 0 16px;padding:9px 16px;
+ background:color-mix(in srgb, var(--nc, var(--accent)) 7%, transparent);color:#9fb3c8;font-style:italic;border-radius:0 8px 8px 0;font-size:13.5px;line-height:1.7}
+.notif-stats{display:flex;gap:10px;margin:18px 0 4px}
+.nstat{flex:1;background:rgba(6,10,20,0.6);border:1px solid var(--border-color);border-radius:var(--r-md);padding:12px 14px}
+.nstat .k{font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:5px}
+.nstat .v{font-family:var(--font-display);font-size:16px;font-weight:800;color:var(--nc,var(--accent))}
+.notif-xp{margin:16px 0 4px}
+.notif-xp .lbl{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);margin-bottom:6px}
+.notif-xp .track{height:8px;background:rgba(255,255,255,0.06);border-radius:100px;overflow:hidden;border:1px solid rgba(255,255,255,0.04);position:relative}
+.notif-xp .fill{height:100%;border-radius:100px;background:linear-gradient(90deg,#3f7fc7,var(--nc,var(--accent)));box-shadow:0 0 10px color-mix(in srgb,var(--nc,var(--accent)) 60%,transparent);width:0;animation:nFill 1.1s .3s cubic-bezier(0.16,1,0.3,1) forwards}
+@keyframes nFill{to{width:var(--w,60%)}}
+.notif-xp .track::after{content:'';position:absolute;inset:0;pointer-events:none;background-image:repeating-linear-gradient(90deg, rgba(4,7,13,0.45) 0 1.5px, transparent 1.5px 11px)}
+.notif-list{list-style:none;margin:6px 0}
+.notif-list li{display:flex;align-items:flex-start;gap:11px;padding:9px 0;font-size:13px;color:#b7c4d4;line-height:1.5;border-bottom:1px solid rgba(255,255,255,0.05)}
+.notif-list li:last-child{border-bottom:none}
+.notif-list .li-ic{width:30px;height:30px;flex-shrink:0;border-radius:9px;display:flex;align-items:center;justify-content:center;
+ background:color-mix(in srgb, var(--li, var(--accent)) 14%, transparent);border:1px solid color-mix(in srgb, var(--li, var(--accent)) 45%, transparent);color:var(--li,var(--accent))}
+.notif-list .li-ic i{width:15px;height:15px}
+.notif-list b{color:#fff;font-weight:700}
+.notif-actions{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
+.n-btn{flex:1;min-width:140px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;border-radius:var(--r-md);
+ font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;transition:var(--transition);border:1px solid transparent;position:relative}
+.n-btn i{width:15px;height:15px}
+.n-btn.primary{color:#061018;background:linear-gradient(180deg, color-mix(in srgb,var(--nc,var(--accent)) 92%, #fff) 0%, var(--nc,var(--accent)) 100%);box-shadow:0 6px 18px color-mix(in srgb,var(--nc,var(--accent)) 30%,transparent), inset 0 1px 0 rgba(255,255,255,0.4)}
+.n-btn.primary:hover{transform:translateY(-1px);box-shadow:0 8px 22px color-mix(in srgb,var(--nc,var(--accent)) 42%,transparent)}
+.n-btn.ghost{color:var(--text-dim);background:rgba(255,255,255,0.03);border-color:var(--border-color)}
+.n-btn.ghost:hover{color:#fff;border-color:var(--border-hover)}
+.notif-foot{margin-top:16px;font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;color:var(--text-muted);text-align:center}
+@media (max-width:560px){.notif-inner{padding:26px 20px 22px}.notif h1{font-size:19px}}
+/* ═══ auth gate ══════════════════════════════════════════════════════════
+   Full-screen sign-in panel shown before anything else. The app only boots
+   (and only reads Firestore) after onAuthStateChanged confirms a user, so
+   the UI behind this overlay is an empty shell until then. */
+.auth-gate{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;
+ background:
+   radial-gradient(ellipse at 50% 25%, rgba(56,132,190,0.30), transparent 62%),
+   radial-gradient(ellipse at 18% 88%, rgba(70,160,205,0.18), transparent 58%),
+   linear-gradient(165deg, rgba(9,22,42,0.97), rgba(5,11,22,0.99));
+ backdrop-filter:blur(10px);opacity:1;transition:opacity .45s ease}
+.auth-gate.hidden{opacity:0;pointer-events:none}
+
+/* frosted-glass panel: light blue tint, soft highlight along the top edge and
+   a wide diffuse glow underneath, so it reads as a pane of lit glass floating
+   above the background rather than a flat card */
+.auth-panel{width:min(400px, calc(100vw - 32px));position:relative;overflow:hidden;
+ background:linear-gradient(158deg,
+   rgba(126,196,236,0.16) 0%,
+   rgba(74,142,190,0.10) 42%,
+   rgba(20,44,74,0.20) 100%);
+ border:1px solid rgba(150,214,244,0.30);
+ border-radius:20px;
+ padding:34px 30px 26px;
+ backdrop-filter:blur(22px) saturate(1.25);
+ -webkit-backdrop-filter:blur(22px) saturate(1.25);
+ box-shadow:
+   0 24px 60px rgba(3,10,24,0.6),
+   0 0 60px rgba(110,190,240,0.14),
+   inset 0 1px 0 rgba(226,244,255,0.42),
+   inset 0 -1px 0 rgba(140,200,240,0.10)}
+/* specular sheen sweeping across the top of the glass */
+.auth-panel::before{content:'';position:absolute;left:-25%;top:-70%;width:150%;height:130%;
+ pointer-events:none;transform:rotate(-14deg);
+ background:linear-gradient(180deg, rgba(214,240,255,0.16) 0%, rgba(214,240,255,0.05) 38%, transparent 70%)}
+/* faint cool rim light on the lower right, opposite the sheen */
+.auth-panel::after{content:'';position:absolute;right:-30%;bottom:-45%;width:80%;height:90%;
+ pointer-events:none;border-radius:50%;
+ background:radial-gradient(circle, rgba(120,200,245,0.16), transparent 68%)}
+.auth-panel > *{position:relative;z-index:1}
+
+.auth-brand{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.auth-brand svg{width:34px;height:26px;color:#a9e2fb;filter:drop-shadow(0 0 8px rgba(150,220,255,0.6))}
+.auth-brand-name{font-size:19px;font-weight:800;letter-spacing:.24em;color:#fff;
+ text-shadow:0 0 18px rgba(150,220,255,0.35)}
+.auth-sub{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+ color:rgba(198,226,244,0.62);margin-bottom:22px}
+
+.auth-field{margin-bottom:12px}
+.auth-field label{display:block;font-family:var(--font-mono);font-size:9px;font-weight:600;
+ letter-spacing:.16em;text-transform:uppercase;color:#a9e2fb;opacity:.9;margin-bottom:6px}
+.auth-field input{width:100%;box-sizing:border-box;
+ background:rgba(228,246,255,0.08);
+ border:1px solid rgba(160,214,244,0.26);border-radius:11px;color:#fff;
+ font-family:var(--font-mono);font-size:13px;padding:11px 13px;outline:none;
+ transition:var(--transition);
+ box-shadow:inset 0 1px 0 rgba(226,244,255,0.16)}
+.auth-field input::placeholder{color:rgba(190,220,240,0.38)}
+.auth-field input:focus{border-color:rgba(150,220,255,0.85);background:rgba(228,246,255,0.13);
+ box-shadow:0 0 0 3px rgba(130,205,245,0.14), inset 0 1px 0 rgba(226,244,255,0.22)}
+
+.auth-err{min-height:16px;font-family:var(--font-mono);font-size:10.5px;color:#ff8fa3;
+ letter-spacing:.03em;margin:2px 0 10px}
+
+.auth-btn{width:100%;
+ background:linear-gradient(180deg, rgba(168,226,252,0.92) 0%, rgba(104,182,228,0.88) 100%);
+ border:1px solid rgba(196,238,255,0.7);color:#06263c;border-radius:11px;cursor:pointer;
+ font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+ padding:12px 0;transition:var(--transition);
+ box-shadow:0 6px 20px rgba(96,178,230,0.34), inset 0 1px 0 rgba(255,255,255,0.6)}
+.auth-btn:hover{background:linear-gradient(180deg, rgba(190,238,255,1) 0%, rgba(122,198,240,0.95) 100%);
+ box-shadow:0 8px 26px rgba(120,200,245,0.5), inset 0 1px 0 rgba(255,255,255,0.75);
+ transform:translateY(-1px)}
+.auth-btn:disabled{opacity:.55;cursor:wait;transform:none}
+
+.auth-links{display:flex;justify-content:space-between;margin-top:16px}
+.auth-links a{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;color:rgba(198,226,244,0.6);
+ cursor:pointer;text-decoration:none;transition:var(--transition)}
+.auth-links a:hover{color:#bfe9ff}
+.auth-foot{margin-top:20px;padding-top:14px;border-top:1px solid rgba(170,220,250,0.14);
+ font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;color:rgba(190,220,240,0.45);text-align:center}
+/* signed-in chip + logout in the topbar */
+.auth-chip{display:inline-flex;align-items:center;gap:8px;margin-left:14px;
+ font-family:var(--font-mono);font-size:9.5px;letter-spacing:.05em;color:var(--text-muted)}
+.auth-chip button{display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.04);
+ border:1px solid var(--border-color);border-radius:100px;color:var(--text-dim);cursor:pointer;
+ width:26px;height:26px;padding:0;transition:var(--transition)}
+.auth-chip button:hover{color:#ff5d7a;border-color:rgba(255,93,122,0.5)}
+@media (max-width:920px){ .auth-chip span{display:none} }
+</style>
+</head>
+<body>
+<div class="bg-photo"></div>
+<script>
+// Background image check: if --bg-image can't load (wrong path, or the host
+// blocks hotlinking — pngtree, Shutterstock and most stock sites do), drop the
+// layer so the original gradient shows cleanly instead of an empty dark box,
+// and say so in the console rather than failing silently.
+(function(){
+ const layer=document.querySelector('.bg-photo');
+ const raw=getComputedStyle(document.documentElement).getPropertyValue('--bg-image').trim();
+ if(!raw || raw==='none'){ layer.style.display='none'; return; }
+ const m=raw.match(/url\(\s*['"]?([^'")]+)['"]?\s*\)/);
+ if(!m){ layer.style.display='none'; return; }
+ const img=new Image();
+ img.onerror=()=>{
+   layer.style.display='none';
+   console.warn('[SHIELD] Background image failed to load:', m[1],
+     '\nIf this is a stock-site URL, hotlinking is blocked — download the file, put it next to this HTML, and set --bg-image: url("lab.jpg").');
+ };
+ img.src=m[1];
+})();
+</script>
+<div class="ambient"></div>
+<div class="notif-overlay" id="notif-overlay"></div>
+
+<!-- ═══ AUTH GATE — first thing the user sees; app boots only after sign-in ═══ -->
+<div class="auth-gate" id="auth-gate">
+ <div class="auth-panel">
+   <div class="auth-brand">
+     <svg viewBox="140 100 590 425" xmlns="http://www.w3.org/2000/svg"><path d="M150,290 C145,230 165,176 216,150 C300,112 410,108 500,116 C580,134 626,156 656,196 C690,232 706,256 700,300 C696,344 712,372 714,402 C716,440 690,460 656,464 C620,468 596,462 580,452 C566,446 560,456 558,472 C556,494 540,512 516,514 C498,515 482,510 472,496 C458,470 450,440 446,418 C440,410 416,412 380,414 C336,418 300,422 288,414 C244,404 210,388 202,356 C198,330 160,332 150,290 Z" fill="none" stroke="currentColor" stroke-width="20" stroke-linejoin="round" stroke-linecap="round"/></svg>
+     <div class="auth-brand-name">S.H.I.E.L.D.</div>
+   </div>
+   <div class="auth-sub" id="auth-sub">Sign in to sync your progress</div>
+   <div class="auth-field">
+     <label for="auth-email">Email</label>
+     <input type="email" id="auth-email" autocomplete="email" placeholder="you@example.com">
+   </div>
+   <div class="auth-field">
+     <label for="auth-pass">Password</label>
+     <input type="password" id="auth-pass" autocomplete="current-password" placeholder="••••••••">
+   </div>
+   <div class="auth-err" id="auth-err"></div>
+   <button class="auth-btn" id="auth-btn" onclick="authSubmit()">Sign in</button>
+   <div class="auth-links">
+     <a id="auth-toggle" onclick="authToggleMode()">Create account</a>
+     <a id="auth-forgot" onclick="authForgot()">Forgot password?</a>
+   </div>
+   <div class="auth-foot">Progress · Diary · XP — saved to your account</div>
+ </div>
+</div>
+
+<div class="topbar">
+<div class="brand" onclick="showPage('map')">
+<div class="brand-icon-box"><svg viewBox="140 100 590 425" xmlns="http://www.w3.org/2000/svg"><path d="M150,290 C145,230 165,176 216,150 C300,112 410,108 500,116 C580,134 626,156 656,196 C690,232 706,256 700,300 C696,344 712,372 714,402 C716,440 690,460 656,464 C620,468 596,462 580,452 C566,446 560,456 558,472 C556,494 540,512 516,514 C498,515 482,510 472,496 C458,470 450,440 446,418 C440,410 416,412 380,414 C336,418 300,422 288,414 C244,404 210,388 202,356 C198,330 160,332 150,290 Z" fill="none" stroke="currentColor" stroke-width="20" stroke-linejoin="round" stroke-linecap="round"/></svg></div>
+<div class="brand-text brand-text-box">
+<div class="brand-name">S.H.I.E.L.D.</div>
+<div class="brand-sub">Supporting Human Intelligence and Emotional Learning and Development</div>
+</div>
+</div>
+<div class="xp-group">
+<div class="rank-card">
+<div class="rank-card-top">
+<span class="xp-lbl" id="rank-lbl"><b>—</b></span>
+<span class="xp-num" id="xp-num">0 / 0 XP</span>
+</div>
+<div class="xp-track"><div class="xp-fill" id="xp-fill"></div></div>
+</div>
+<div class="streak" id="streak-pill">⚡ 0-day streak</div>
+<div class="auth-chip" id="auth-chip" style="display:none">
+ <span id="auth-chip-email"></span>
+ <button onclick="authSignOut()" title="Sign out" aria-label="Sign out"><i data-lucide="log-out" style="width:13px"></i></button>
+</div>
+</div>
+<!-- mobile-only: compact Lv pill in the top-right corner; tapping it opens
+     the full rank/XP/streak card (.xp-group) as a dropdown -->
+<button class="xp-mini" id="xp-mini" onclick="toggleXpMini(event)" aria-label="Rank and XP">
+<span class="xp-mini-lvl" id="xp-mini-lvl">Lv –</span>
+<span class="xp-mini-track"><span class="xp-mini-fill" id="xp-mini-fill"></span></span>
+</button>
+</div>
+
+<div class="iconbar">
+<button class="ib-btn active" id="ib-map" style="--ib:var(--c-map)" onclick="showPage('map')"><i data-lucide="brain"></i><span>MAP</span></button>
+<button class="ib-btn" id="ib-library" style="--ib:var(--c-library)" onclick="showPage('library')"><i data-lucide="book-open"></i><span>LIBRARY</span></button>
+<button class="ib-btn" id="ib-flashcards" style="--ib:var(--c-cards)" onclick="showPage('flashcards')"><i data-lucide="layers"></i><span>CARDS</span></button>
+<button class="ib-btn" id="ib-challenges" style="--ib:var(--c-challenges)" onclick="showPage('challenges')"><i data-lucide="zap"></i><span>CHALLENGES</span></button>
+<button class="ib-btn" id="ib-diary" style="--ib:var(--c-diary)" onclick="showPage('diary')"><i data-lucide="pen-tool"></i><span>DIARY</span></button>
+<button class="ib-btn" id="ib-services" style="--ib:var(--c-services)" onclick="showPage('services')"><i data-lucide="briefcase"></i><span>SERVICES</span></button>
+</div>
+
+<!-- MAP -->
+<div class="page active" id="page-map">
+<div class="map-layout">
+
+ <aside class="metrics-dock" id="metrics-dock">
+   <button class="dock-close" onclick="toggleDock('metrics-dock')" aria-label="Close status panel"><i data-lucide="x" style="width:15px"></i></button>
+   <div class="dock-status">
+     <div class="dock-status-top">
+       <span class="dock-status-rank"><b>—</b></span>
+       <span class="dock-status-xpnum">0 / 0 XP</span>
+     </div>
+     <div class="dock-status-xp-track"><div class="dock-status-xp-fill"></div></div>
+     <div class="dock-status-streak">⚡ 0-day streak</div>
+   </div>
+   <div class="md-header-row">
+     <div class="md-eyebrow"><i data-lucide="activity" style="width:13px"></i> Mind Status</div>
+     <div class="md-overall">
+       <div class="md-overall-bar"><div class="md-overall-fill" id="hero-bar-fill"></div></div>
+       <span class="md-overall-pct" id="hero-pct">0%</span>
+     </div>
+   </div>
+
+   <div class="md-activity-row">
+     <div class="donut-host-sm"><svg id="donut" viewBox="0 0 176 176"></svg></div>
+     <div class="md-mastered">
+       <div class="big" id="hero-modules">0 / 0</div>
+       <div class="sub" id="hero-sub">Thoughts on all modules</div>
+     </div>
+   </div>
+
+   <div class="md-section-title">Topics <span class="hint">tap to open</span></div>
+   <div id="region-list" class="md-topics-list"></div>
+
+   <div class="md-callouts">
+     <div class="callout">
+       <div class="c-lbl"><i data-lucide="flame" style="width:11px"></i> Strongest</div>
+       <div class="c-val" id="co-strong">—</div>
+       <div class="c-meta" id="co-strong-meta">—</div>
+     </div>
+     <div class="callout">
+       <div class="c-lbl"><i data-lucide="crosshair" style="width:11px"></i> Focus next</div>
+       <div class="c-val" id="co-focus">—</div>
+       <div class="c-meta" id="co-focus-meta">—</div>
+     </div>
+   </div>
+ </aside>
+
+ <div class="brain-area">
+   <button class="dock-toggle" onclick="toggleDock('metrics-dock')"><i data-lucide="bar-chart-2" style="width:13px"></i> Status</button>
+   <div class="map-wrap">
+     <svg id="mapSvg" viewBox="135 95 580 450" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+       <defs>
+         <filter id="softGlow" x="-90%" y="-90%" width="280%" height="280%">
+           <feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/></feMerge>
+         </filter>
+         <filter id="neonGlow" x="-30%" y="-30%" width="160%" height="160%">
+           <feGaussianBlur stdDeviation="2.4" result="blur"/>
+           <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+         </filter>
+         <filter id="axonGlow" x="-60%" y="-60%" width="220%" height="220%">
+           <feGaussianBlur stdDeviation="1.4" result="blur"/>
+           <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+         </filter>
+         <radialGradient id="coreGrad" cx="50%" cy="42%" r="60%">
+           <stop offset="0%" stop-color="#114054"/><stop offset="100%" stop-color="#08111f"/>
+         </radialGradient>
+         <radialGradient id="brainFill" cx="42%" cy="38%" r="75%">
+           <stop offset="0%" stop-color="rgba(36,64,98,0.42)"/><stop offset="100%" stop-color="rgba(14,28,50,0.30)"/>
+         </radialGradient>
+         <clipPath id="brainClip"><path id="brainClipShape" d=""/></clipPath>
+       </defs>
+       <g id="brain"></g>
+       <g id="lines"></g>
+       <g id="pulses"></g>
+       <g id="nodes"></g>
+     </svg>
+     <div class="cpanel" id="cpanel">
+       <div class="cp-head">
+         <div class="cp-dot" id="cp-dot"></div>
+         <span class="cp-title" id="cp-title">—</span>
+         <button class="cp-close" onclick="closePanel()">✕</button>
+       </div>
+       <div class="prog-wrap" id="prog-wrap" style="display:none">
+         <div class="prog-row"><span id="prog-label">Progress</span><span id="prog-pct">0%</span></div>
+         <div class="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
+       </div>
+       <div class="cp-tabs" id="cp-tabs"></div>
+       <div class="cp-body" id="cp-body"></div>
+     </div>
+   </div>
+ </div>
+
+</div>
+</div>
+
+<!-- LIBRARY -->
+<div class="page" id="page-library">
+<div class="map-layout">
+<aside class="metrics-dock" id="dock-library"></aside>
+<div class="brain-area">
+<div class="lib-wrap" id="lib-wrap"><div class="loading">Loading Mindspace…</div></div>
+</div>
+</div>
+</div>
+
+<!-- FLASHCARDS -->
+<div class="page" id="page-flashcards">
+<div class="map-layout">
+<aside class="metrics-dock" id="dock-flashcards"></aside>
+<div class="brain-area">
+<div class="lib-wrap" id="fc-wrap"><div class="loading">Loading Deck…</div></div>
+</div>
+</div>
+</div>
+
+<!-- CHALLENGES -->
+<div class="page" id="page-challenges">
+<div class="map-layout">
+<aside class="metrics-dock" id="dock-challenges"></aside>
+<div class="brain-area">
+<div class="lib-wrap" id="ch-wrap"><div class="loading">Loading Operations…</div></div>
+</div>
+</div>
+</div>
+
+<!-- DIARY -->
+<div class="page" id="page-diary">
+<div class="diary-layout">
+<div class="diary-composer">
+<h2><i data-lucide="feather" style="width:18px;"></i> Diary</h2>
+<textarea class="diary-textarea" id="diary-input" placeholder="What mental patterns did you notice today?..." rows="6"></textarea>
+<div class="diary-foot">
+<span style="font-size:11px; font-weight:600; color:var(--text-dim)">Current State:</span>
+<div class="mood-group">
+<button class="mood-btn" onclick="selectMood(this,'😊 Good')">😊 Good</button>
+<button class="mood-btn" onclick="selectMood(this,'😐 Neutral')">😐 Neutral</button>
+<button class="mood-btn" onclick="selectMood(this,'😔 Hard')">😔 Hard</button>
+<button class="mood-btn" onclick="selectMood(this,'🔥 Energized')">🔥 Energized</button>
+<button class="mood-btn" onclick="selectMood(this,'😴 Tired')">😴 Tired</button>
+</div>
+<div class="diary-actions">
+<button class="diary-save" onclick="saveDiaryEntry()">Secure Entry</button>
+<button class="diary-ai-btn" onclick="triggerAiInsight()" title="AI Psychological Analysis"><i data-lucide="sparkles" style="width:16px;"></i></button>
+</div>
+</div>
+</div>
+<div class="diary-entries" id="diary-entries"><div class="loading">Syncing Chronology…</div></div>
+</div>
+</div>
+
+<!-- SERVICES -->
+<div class="page" id="page-services"><div class="svc-wrap">
+
+ <div class="svc-hero">
+   <svg class="svc-hero-art" viewBox="0 0 600 90" preserveAspectRatio="xMidYMid meet">
+     <line x1="40" y1="45" x2="150" y2="20" stroke="#4fd1c5" stroke-width="1" stroke-opacity="0.35"/>
+     <line x1="150" y1="20" x2="270" y2="55" stroke="#5ec8f5" stroke-width="1" stroke-opacity="0.35"/>
+     <line x1="270" y1="55" x2="390" y2="18" stroke="#e8cf86" stroke-width="1" stroke-opacity="0.35"/>
+     <line x1="390" y1="18" x2="520" y2="48" stroke="#b478ff" stroke-width="1" stroke-opacity="0.35"/>
+     <line x1="150" y1="20" x2="390" y2="18" stroke="#7dd6e8" stroke-width="1" stroke-opacity="0.2"/>
+     <line x1="270" y1="55" x2="520" y2="48" stroke="#7dd6e8" stroke-width="1" stroke-opacity="0.2"/>
+     <circle cx="40" cy="45" r="4" fill="#4fd1c5"/>
+     <circle cx="150" cy="20" r="4" fill="#5ec8f5"/>
+     <circle cx="270" cy="55" r="4" fill="#e8cf86"/>
+     <circle cx="390" cy="18" r="4" fill="#b478ff"/>
+     <circle cx="520" cy="48" r="4" fill="#4fd1c5"/>
+   </svg>
+   <h1>Beyond the app: SHIELD services</h1>
+   <p>SHIELD started as a personal growth companion — but the same psychology-driven approach also powers real organizational work. Here's what else SHIELD (and the person behind it) can help your team with. 🧠✨</p>
+ </div>
+
+ <div class="svc-groups">
+
+   <div class="svc-group">
+     <div class="svc-group-head" style="--sc-accent:var(--sc-analysis)">
+       <span class="svc-group-icon">🔍</span><span class="svc-group-title">Organizational analyses</span>
+     </div>
+     <div class="svc-grid">
+       <div class="svc-card" style="--sc-accent:var(--sc-analysis)"><span class="svc-emoji">🧩</span><div class="svc-name">Big Five</div><div class="svc-desc">Personality-trait assessment for individuals and teams.</div></div>
+       <div class="svc-card" style="--sc-accent:var(--sc-analysis)"><span class="svc-emoji">🔥</span><div class="svc-name">Engagement</div><div class="svc-desc">Survey-based measurement of workforce engagement drivers.</div></div>
+       <div class="svc-card" style="--sc-accent:var(--sc-analysis)"><span class="svc-emoji">🕸️</span><div class="svc-name">Sociometry</div><div class="svc-desc">Mapping informal relationships and influence within a team.</div></div>
+       <div class="svc-card" style="--sc-accent:var(--sc-analysis)"><span class="svc-emoji">📄</span><div class="svc-name">Document analysis</div><div class="svc-desc">Structured review of policies, processes, and HR documentation.</div></div>
+       <div class="svc-card" style="--sc-accent:var(--sc-analysis)"><span class="svc-emoji">🏛️</span><div class="svc-name">Hierarchy analysis</div><div class="svc-desc">Mapping reporting lines, spans of control, and org structure.</div></div>
+       <div class="svc-card" style="--sc-accent:var(--sc-analysis)"><span class="svc-emoji">💬</span><div class="svc-name">Communication analysis</div><div class="svc-desc">Diagnosing how information actually flows across a team.</div></div>
+       <div class="svc-card" style="--sc-accent:var(--sc-analysis)"><span class="svc-emoji">🎯</span><div class="svc-name">SWOT &amp; 360</div><div class="svc-desc">Strategic self-assessment and multi-rater feedback reviews.</div></div>
+     </div>
+   </div>
+
+   <div class="svc-group">
+     <div class="svc-group-head" style="--sc-accent:var(--sc-dash)">
+       <span class="svc-group-icon">📊</span><span class="svc-group-title">Dashboards &amp; reporting</span>
+     </div>
+     <div class="svc-grid">
+       <div class="svc-card" style="--sc-accent:var(--sc-dash)"><span class="svc-emoji">📈</span><div class="svc-name">People dashboarding</div><div class="svc-desc">Dashboarding and reporting on People metrics across several industries.</div></div>
+     </div>
+   </div>
+
+   <div class="svc-group">
+     <div class="svc-group-head" style="--sc-accent:var(--sc-perf)">
+       <span class="svc-group-icon">🚀</span><span class="svc-group-title">Performance development</span>
+     </div>
+     <div class="svc-grid">
+       <div class="svc-card" style="--sc-accent:var(--sc-perf)"><span class="svc-emoji">🕯️</span><div class="svc-name">Burnout</div><div class="svc-desc">Early detection and prevention support for burnout risk.</div></div>
+       <div class="svc-card" style="--sc-accent:var(--sc-perf)"><span class="svc-emoji">🎯</span><div class="svc-name">Personal goals (SMART)</div><div class="svc-desc">Structured goal-setting using the SMART framework.</div></div>
+       <div class="svc-card" style="--sc-accent:var(--sc-perf)"><span class="svc-emoji">🗂️</span><div class="svc-name">Competency repository</div><div class="svc-desc">A structured library of role competencies and behavioral anchors.</div></div>
+       <div class="svc-card" style="--sc-accent:var(--sc-perf)"><span class="svc-emoji">🌟</span><div class="svc-name">Positive leadership</div><div class="svc-desc">Strengths-based leadership development approach.</div></div>
+       <div class="svc-card" style="--sc-accent:var(--sc-perf)"><span class="svc-emoji">🎡</span><div class="svc-name">Life wheel &amp; life map</div><div class="svc-desc">Self-knowledge tools for reflecting on life balance and direction.</div></div>
+     </div>
+   </div>
+
+   <div class="svc-group">
+     <div class="svc-group-head" style="--sc-accent:var(--sc-tools)">
+       <span class="svc-group-icon">🧰</span><span class="svc-group-title">Further tools &amp; areas</span>
+     </div>
+     <div class="svc-grid">
+       <div class="svc-card" style="--sc-accent:var(--sc-tools)"><span class="svc-emoji">📋</span><div class="svc-name">General HR tasks</div><div class="svc-desc">Day-to-day HR-basic support and process execution.</div></div>
+       <div class="svc-card" style="--sc-accent:var(--sc-tools)"><span class="svc-emoji">🏢</span><div class="svc-name">Environmental preferences</div><div class="svc-desc">Understanding how physical/work environment affects people.</div></div>
+       <div class="svc-card" style="--sc-accent:var(--sc-tools)"><span class="svc-emoji">🌍</span><div class="svc-name">World game</div><div class="svc-desc">Interactive team exercise for exploring group dynamics.</div></div>
+     </div>
+   </div>
+
+ </div>
+</div></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+firebase.initializeApp({
+ apiKey:"AIzaSyCmZ4jAtTQ7w5pVh0iCr_OZ7PA-qvJZkXU",
+ authDomain:"shield-app84.firebaseapp.com",
+ projectId:"shield-app84",
+ storageBucket:"shield-app84.firebasestorage.app",
+ messagingSenderId:"910445934986",
+ appId:"1:910445934986:web:5cc89e342730a3bdcb3073"
+});
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+// ═══ per-user state layer ═══════════════════════════════════════════════
+// Progress ("seen") and notification history used to live in localStorage;
+// they now live under users/{uid}/state/* in Firestore so they follow the
+// account across devices. In-memory caches keep every existing call site
+// synchronous — Firestore writes are fire-and-forget merges behind them.
+let UID=null, USER_EMAIL=null;
+let SEEN={};    // itemId  -> ISO timestamp (replaces localStorage 'sh_seen')
+let NSEEN={};   // notifKey-> ISO timestamp (replaces localStorage 'sh_notif')
+function userStateDoc(name){ return db.collection('users').doc(UID).collection('state').doc(name); }
+function userDiaryCol(){ return db.collection('users').doc(UID).collection('diary'); }
+async function loadUserState(){
+ const [p,n]=await Promise.all([userStateDoc('progress').get(), userStateDoc('notifs').get()]);
+ SEEN = p.exists ? (p.data()||{}) : {};
+ NSEEN = n.exists ? (n.data()||{}) : {};
+}
+// Accounts always start from zero: progress collected in this browser before
+// accounts existed is NOT folded in — the stale localStorage keys are simply
+// purged so they can never bleed into any account.
+function purgeLegacyLocalState(){
+ localStorage.removeItem('sh_seen'); localStorage.removeItem('sh_notif');
+}
+// Dev/console helper: wipe the signed-in account's progress + notification
+// history back to zero (diary untouched), then reload. On the next load the
+// account behaves like brand new — welcome notification included.
+// Run from DevTools console:  resetProgress()
+async function resetProgress(){
+ if(!UID){ console.warn('resetProgress: not signed in'); return; }
+ await Promise.all([userStateDoc('progress').delete(), userStateDoc('notifs').delete()]);
+ SEEN={}; NSEEN={};
+ console.log('Progress reset — reloading.');
+ location.reload();
+}
+
+// Unified core-ability palette (Phase 1 design system). Each topic's color now
+// lives in exactly one place — everything else (map nodes, library accents,
+// donut charts, panels) reads from this array via COLORS[id], so a future
+// palette change only ever needs to happen here.
+const TOPICS = [
+ {id:'bio', label:'Biology',     core:'Neuron system',           color:'#2f9e63'}, // dark green
+ {id:'cog', label:'Cognitive',   core:'Schemes',                 color:'#ff2d6b'}, // neon pink-red
+ {id:'emo', label:'Emotions',    core:'Emotional intelligence',  color:'#ff3b3b'}, // neon red
+ {id:'perf',label:'Performance', core:'Engagement',              color:'#5ec8f5'}, // light blue
+ {id:'pers',label:'Personality', core:'Attitude',                color:'#6a1fe0'}, // deep neon violet
+ {id:'res', label:'Resilience',  core:'Coping',                  color:'#ff9d4d'}, // orange
+ {id:'soc', label:'Social World',core:'Awareness',               color:'#1fdf8f'}, // neon emerald green (swapped with Work)
+ {id:'sport',label:'Sport',      core:'Flow',                    color:'#1f2aa8'}, // deep neon indigo-blue
+ {id:'work',label:'Work',        core:'Satisfaction',            color:'#f7d046'}, // yellow (swapped with Social World)
+];
+// Publish each topic's color as a CSS custom property (--topic-<id>) so
+// stylesheet rules (e.g. the Library card top-border in Phase 2) can read the
+// same single source of truth instead of duplicating hex values in CSS.
+function publishTopicColorTokens(){
+ const root=document.documentElement.style;
+ TOPICS.forEach(t=>root.setProperty(`--topic-${t.id}`, t.color));
+}
+publishTopicColorTokens();
+let SUBCATS = {
+ perf:['Focus','Flow','Energy management','Group dynamics','Overcoming procrastination','Goal setting','Sports psychology'],
+ work:['Decision making','Leadership thinking','Conflict management','Negotiation psychology','Team dynamics','Social web at work','Burnout','Stress management'],
+ soc:['Human motivation','Recognizing manipulation','Persuasion','First impressions','Status dynamics','Field theory'],
+ pers:['Personality types','Measurement interpretation','External & internal dependencies','Attitude','Self-awareness','Values','Identity','Behavioral patterns','Spiritual','Mentality as a whole','Shield mindset'],
+ emo:['Emotion regulation','Empathy','Stress management','Emotional awareness','Emotions in others','Emotion recognition','Emotions vs performance'],
+ cog:['Memory techniques','Accelerated learning','Spaced repetition','Concentration','Biology background'],
+ res:['Resilience','Handling failure','Mental toughness','Stress adaptation','Rationalization','Schema therapy','Positive mindset basics'],
+ bio:['Brain regions overview','Brain region functions','Perception'],
+ sport:['Foundations of sport psychology','Goal setting for athletes','Motivation & drive','Confidence & self-efficacy','Concentration & attentional focus','Flow & peak performance','Arousal, anxiety & activation','Competition nerves & emotional control','Mental toughness & resilience','Self-talk & cognitive strategies','Imagery & visualization','Pre-performance routines & rituals','Pressure, choking & clutch performance','Coping with setbacks & mistakes','Injury, rehabilitation & return to sport','Recovery, sleep & burnout prevention','Team cohesion & communication','Leadership & the coach–athlete relationship','Discipline, habits & deliberate practice','Athlete identity, transitions & wellbeing']
+};
+
+async function loadCustomSubcats() {
+ try {
+   const snap = await db.collection('config').doc('subcats').get();
+   if(snap.exists) {
+     const data = snap.data();
+     Object.keys(data).forEach(k => {
+       if(SUBCATS[k]) { data[k].forEach(s => { if(!SUBCATS[k].includes(s)) SUBCATS[k].push(s); }); }
+       else { SUBCATS[k] = data[k]; }
+     });
+   }
+ } catch(e) { console.warn('loadCustomSubcats:', e.message); }
+}
+
+const COLORS = Object.fromEntries(TOPICS.map(t=>[t.id,t.color]));
+const LABELS = Object.fromEntries(TOPICS.map(t=>[t.id,t.label]));
+const CORE = Object.fromEntries(TOPICS.map(t=>[t.id,t.core]));
+const TOPIC_IDS = TOPICS.map(t=>t.id);
+const NS='http://www.w3.org/2000/svg', CY='#5ad6f0', R=25;
+// The YOU topic isn't in TOPICS (it earns no XP and sits outside the 8-topic
+// pool), but it needs the same color/label/core-ability lookups everything
+// else uses so it can reuse openTopicPanel/loadPanel unmodified.
+COLORS.you=CY; LABELS.you='You'; CORE.you='Integration';
+
+/* Side-view brain (facing left). Brainstem = YOU. Topics spread evenly across the form. */
+const POS = {
+ cog:[222,236], perf:[415,178], work:[560,190], bio:[640,262],
+ pers:[282,335], emo:[540,330], res:[655,395], soc:[338,242],
+ sport:[424,318],
+ you:[512,470]
+};
+const BRAIN_CENTER=[430,290];
+// network = every topic connected to every other topic, plus each topic to YOU
+const EDGES=[];
+for(let i=0;i<TOPIC_IDS.length;i++) for(let j=i+1;j<TOPIC_IDS.length;j++) EDGES.push([TOPIC_IDS[i],TOPIC_IDS[j]]);
+const CORE_EDGES = TOPIC_IDS.map(id=>['you',id]);
+const ALL_EDGES = [...EDGES.map(e=>[e[0],e[1],'t']), ...CORE_EDGES.map(e=>[e[0],e[1],'c'])];
+
+lucide.createIcons();
+
+// ===== data + stats =====
+let RAW = { items: [], diary: [] };
+let STATS = { overall:{total:0,done:0}, byTopic:{} };
+
+async function fsAll(col){ const snap=await db.collection(col).get(); return snap.docs.map(d=>({id:d.id,...d.data()})); }
+function getSeen(){ return SEEN; }
+function markSeen(id){
+ if(!SEEN[id]){
+   const ts=new Date().toISOString(); SEEN[id]=ts;
+   if(UID) userStateDoc('progress').set({[id]:ts},{merge:true}).catch(e=>console.warn('progress sync:',e.message));
+ }
+ recomputeStats(); refreshDashboard();
+ ['lib-wrap','fc-wrap','ch-wrap'].forEach(refreshContentDock);
+ checkNotifications();
+}
+
+async function loadStats(){
+ try{
+   const [arts, fcs, chs] = await Promise.all([fsAll('articles'), fsAll('flashcards'), fsAll('challenges')]);
+   RAW.items = [
+     ...arts.map(i=>({...i,_col:'articles'})),
+     ...fcs.map(i=>({...i,_col:'flashcards'})),
+     ...chs.map(i=>({...i,_col:'challenges'})),
+   ];
+ }catch(e){ console.warn('loadStats items:', e.message); RAW.items=[]; }
+ try{ const dsnap=await userDiaryCol().orderBy('created','desc').get(); RAW.diary=dsnap.docs.map(d=>({id:d.id,...d.data()})); }catch(e){ RAW.diary=[]; }
+ recomputeStats();
+}
+
+function statsForCol(col){
+ const seen=getSeen();
+ const byTopic={};
+ TOPIC_IDS.forEach(id=>{ byTopic[id]={total:0,done:0,subcats:{}}; (SUBCATS[id]||[]).forEach(s=>byTopic[id].subcats[s]={total:0,done:0}); });
+ let total=0,done=0;
+ const pool = col ? (RAW.items||[]).filter(i=>i._col===col) : (RAW.items||[]);
+ pool.forEach(it=>{
+   const t=byTopic[it.topic]; if(!t) return;
+   const isDone=!!seen[it.id];
+   t.total++; total++; if(isDone){ t.done++; done++; }
+   if(it.subcat && t.subcats[it.subcat]){ t.subcats[it.subcat].total++; if(isDone) t.subcats[it.subcat].done++; }
+ });
+ return { overall:{total,done}, byTopic };
+}
+function recomputeStats(){ STATS = statsForCol(null); }
+function pct(d,t){ return t? Math.round(d/t*100):0; }
+
+// ===== activity / streak =====
+function activityDates(){
+ const seen=getSeen(); const set=new Set();
+ Object.values(seen).forEach(v=>{ if(typeof v==='string') set.add(v.slice(0,10)); });
+ RAW.diary.forEach(d=>{ const k=(d.date||d.created||'').slice(0,10); if(k) set.add(k); });
+ return set;
+}
+function dayKey(d){ return d.toISOString().slice(0,10); }
+function computeStreak(){
+ const set=activityDates(); if(!set.size) return 0;
+ const today=new Date(); const tk=dayKey(today);
+ const y=new Date(today); y.setDate(y.getDate()-1);
+ let cur=new Date(today);
+ if(!set.has(tk)){ if(set.has(dayKey(y))) cur=y; else return 0; }
+ let streak=0;
+ while(set.has(dayKey(cur))){ streak++; cur.setDate(cur.getDate()-1); }
+ return streak;
+}
+function masteredPerDay(){
+ const seen=getSeen(); const counts={};
+ Object.values(seen).forEach(v=>{ if(typeof v==='string'){ const k=v.slice(0,10); counts[k]=(counts[k]||0)+1; } });
+ const out=[];
+ for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); const k=dayKey(d); out.push({label:['S','M','T','W','T','F','S'][d.getDay()], n:counts[k]||0}); }
+ return out;
+}
+
+// ===== xp / rank (Phase 4) =====
+// Reward values as specified: article=1000, flashcard(deck)=500, quest=1500.
+// Completion is tracked per Firestore doc id (via getSeen()), matching the
+// existing markSeen() granularity — so "flashcard: 500XP/card" is read as
+// "500XP per flashcard module", consistent with how completion is already
+// recorded for every other content type in this app.
+const XP_VALUES={articles:1000, flashcards:500, challenges:1500};
+const RANKS=['Spark','Circuit','Synapse','Vector','Cortex','Nexus','Oracle','Architect','Luminant','Singularity'];
+function rankForLevel(lvl){
+ const idx=Math.min(RANKS.length-1, Math.floor((lvl-1)/(100/RANKS.length)));
+ return RANKS[idx];
+}
+// XP is earned only from the 8 core topics — collecting 100% of their combined
+// max XP = Level 96. The YOU topic (unlocked at 84% of that same max) earns no
+// XP of its own; finishing it grants a fixed bonus climb from 96 to 100.
+function computeXpModel(){
+ const seen=getSeen(); let coreMax=0, coreEarned=0, youTotal=0, youDone=0;
+ (RAW.items||[]).forEach(it=>{
+   const val=XP_VALUES[it._col]||0;
+   if(it.topic==='you'){ youTotal++; if(seen[it.id]) youDone++; }
+   else { coreMax+=val; if(seen[it.id]) coreEarned+=val; }
+ });
+ const coreFrac=coreMax? coreEarned/coreMax : 0;
+ const coreLevel=1+Math.min(95, Math.floor(coreFrac*96));
+ const youUnlocked=coreMax>0 && coreFrac>=0.84;
+ const youFrac=youTotal? youDone/youTotal : 0;
+ const coreMaxed=coreMax>0 && coreEarned>=coreMax;
+ const level=coreMaxed && youTotal>0 ? 96+Math.min(4,Math.round(youFrac*4)) : coreLevel;
+ return {coreMax,coreEarned,coreFrac,coreLevel,coreMaxed,youUnlocked,youTotal,youDone,youFrac,level};
+}
+function youUnlockedNow(){ return computeXpModel().youUnlocked; }
+function updateTopbar(){
+ const m=computeXpModel();
+ const maxed=m.level>=100;
+ document.getElementById('rank-lbl').innerHTML=`<b>${rankForLevel(m.level)}</b> · Lv ${m.level}${maxed?' · MAX':''}`;
+ let withinPct=0, xpLbl='0 / 0 XP';
+ if(!m.coreMaxed || m.youTotal===0){
+   const bandXp=m.coreMax/96;
+   const inBand=bandXp? m.coreEarned-(m.level-1)*bandXp : 0;
+   withinPct=bandXp? Math.max(0,Math.min(100, inBand/bandXp*100)) : 0;
+   xpLbl=`${Math.round(m.coreEarned)} / ${Math.round(m.coreMax)} XP`;
+ } else if(!maxed){
+   withinPct=Math.max(0,Math.min(100, (m.youFrac*4-(m.level-96))*100));
+   xpLbl=`${m.youDone} / ${m.youTotal} YOU`;
+ } else {
+   withinPct=100; xpLbl=`${m.youDone} / ${m.youTotal} YOU · MAX`;
+ }
+ document.getElementById('xp-num').textContent=xpLbl;
+ document.getElementById('xp-fill').style.width=withinPct+'%';
+ document.getElementById('streak-pill').textContent=`⚡ ${computeStreak()}-day streak`;
+ // mobile: the same status also lives inside every dock (map + content pages),
+ // since the topbar's rank/XP/streak are hidden on narrow screens in favor of
+ // the dock-toggle button — see .dock-status in CSS
+ const rankHtml=`<b>${rankForLevel(m.level)}</b> · Lv ${m.level}${maxed?' · MAX':''}`;
+ const streakTxt=`⚡ ${computeStreak()}-day streak`;
+ document.querySelectorAll('.dock-status-rank').forEach(el=>el.innerHTML=rankHtml);
+ document.querySelectorAll('.dock-status-xpnum').forEach(el=>el.textContent=xpLbl);
+ document.querySelectorAll('.dock-status-xp-fill').forEach(el=>el.style.width=withinPct+'%');
+ document.querySelectorAll('.dock-status-streak').forEach(el=>el.textContent=streakTxt);
+ // mobile: compact Lv pill in the top-right corner mirrors the same numbers
+ const miniLvl=document.getElementById('xp-mini-lvl'); if(miniLvl) miniLvl.textContent=`Lv ${m.level}`;
+ const miniFill=document.getElementById('xp-mini-fill'); if(miniFill) miniFill.style.width=withinPct+'%';
+}
+
+// mobile: the Lv pill opens/closes the rank/XP/streak card as a dropdown;
+// tapping anywhere outside closes it
+function toggleXpMini(e){
+ e.stopPropagation();
+ const g=document.querySelector('.xp-group'); if(g) g.classList.toggle('open');
+}
+document.addEventListener('click',(e)=>{
+ const g=document.querySelector('.xp-group');
+ if(g && g.classList.contains('open') && !g.contains(e.target) && !e.target.closest('.xp-mini')) g.classList.remove('open');
+});
+
+// ===== metrics dock =====
+function buildMetrics(){
+ const o=STATS.overall, p=pct(o.done,o.total);
+ const bar=document.getElementById('hero-bar-fill'); if(bar) bar.style.width=p+'%';
+ document.getElementById('hero-pct').textContent=p+'%';
+ document.getElementById('hero-modules').textContent=`${o.done} / ${o.total}`;
+ const topicsWith=TOPIC_IDS.filter(id=>(STATS.byTopic[id]||{}).total>0).length;
+ document.getElementById('hero-sub').textContent='Thoughts on all modules';
+
+ const withContent=TOPIC_IDS.map(id=>{const t=STATS.byTopic[id]||{total:0,done:0,subcats:{}};return {id,t,p:pct(t.done,t.total)};}).filter(x=>x.t.total>0);
+ const setCallout=(elId,metaId,x)=>{
+   const e=document.getElementById(elId), m=document.getElementById(metaId);
+   const box=e.closest('.callout');
+   if(!x){ e.innerHTML='<span style="color:var(--text-muted);font-weight:600">—</span>'; m.textContent='no data'; if(box) box.style.removeProperty('--rc'); return; }
+   if(box) box.style.setProperty('--rc', COLORS[x.id]);
+   e.innerHTML=`<span class="dotc" style="background:${COLORS[x.id]};box-shadow:0 0 8px ${COLORS[x.id]}"></span><span>${LABELS[x.id]}</span>`;
+   m.textContent=`${x.p}% · ${x.t.done}/${x.t.total}`;
+ };
+ if(withContent.length){
+   const strong=withContent.slice().sort((a,b)=>b.p-a.p||b.t.done-a.t.done)[0];
+   const pool=withContent.filter(x=>x.p<100);
+   const focus=(pool.length?pool:withContent).slice().sort((a,b)=>a.p-b.p||b.t.total-a.t.total)[0];
+   setCallout('co-strong','co-strong-meta',strong); setCallout('co-focus','co-focus-meta',focus);
+ } else { setCallout('co-strong','co-strong-meta',null); setCallout('co-focus','co-focus-meta',null); }
+
+ document.getElementById('region-list').innerHTML=TOPICS.map(t=>{
+   const s=STATS.byTopic[t.id]||{total:0,done:0}; const pp=pct(s.done,s.total); const dim=s.total===0;
+   return `<div class="region-row${activeTopic===t.id?' active':''}" onclick="openTopicPanel('${t.id}')" style="--rc:${t.color};${dim?'opacity:.42':''}">
+     <span class="region-dot" style="background:${t.color};box-shadow:0 0 8px ${t.color}"></span>
+     <span class="region-name">${t.label}</span>
+     <span class="region-bar"><span class="region-fill" style="width:${pp}%;background:${t.color}"></span></span>
+     <span class="region-val">${dim?'—':pp+'%'}</span>
+   </div>`;
+ }).join('');
+
+ buildDonut();
+ lucide.createIcons();
+}
+
+function arcPath(cx,cy,r,a0,a1){
+ const p=(deg)=>{const a=(deg-90)*Math.PI/180;return[cx+r*Math.cos(a),cy+r*Math.sin(a)];};
+ const [sx,sy]=p(a0),[ex,ey]=p(a1); const large=(a1-a0)>180?1:0;
+ return `M${sx.toFixed(2)} ${sy.toFixed(2)} A${r} ${r} 0 ${large} 1 ${ex.toFixed(2)} ${ey.toFixed(2)}`;
+}
+function buildDonut(){
+ const svg=document.getElementById('donut'); if(!svg) return;
+ const cx=88,cy=88,r=66,sw=13,gap=5,seg=360/TOPICS.length;
+ let out='';
+ TOPICS.forEach((t,i)=>{
+   const s=STATS.byTopic[t.id]||{total:0,done:0}; const p=pct(s.done,s.total);
+   const a0=i*seg+gap/2, a1=(i+1)*seg-gap/2, dim=s.total===0;
+   out+=`<path d="${arcPath(cx,cy,r,a0,a1)}" fill="none" stroke="${t.color}" stroke-opacity="${dim?0.1:0.16}" stroke-width="${sw}" stroke-linecap="round"/>`;
+   if(s.total>0 && p>0){
+     const aF=a0 + (a1-a0)*p/100, isActive=activeTopic===t.id;
+     out+=`<path class="donut-seg${isActive?' active':''}" onclick="openTopicPanel('${t.id}')" d="${arcPath(cx,cy,r,a0,Math.max(a0+0.4,aF))}" fill="none" stroke="${t.color}" stroke-width="${isActive?sw+4:sw}" stroke-linecap="round" style="filter:drop-shadow(0 0 ${isActive?11:4}px ${t.color})"><title>${t.label}: ${p}% (${s.done}/${s.total})</title></path>`;
+   }
+ });
+ svg.innerHTML=out;
+}
+function refreshDashboard(){ buildMetrics(); updateTopbar(); refreshMapGlow(); }
+
+// ===== brain map =====
+function el(tag,attrs){ const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); return e; }
+function curvePath(a,b,bow){
+ const mx=(a[0]+b[0])/2, my=(a[1]+b[1])/2, dx=b[0]-a[0], dy=b[1]-a[1], len=Math.hypot(dx,dy)||1;
+ return `M${a[0]},${a[1]} Q${mx-dy/len*bow},${my+dx/len*bow} ${b[0]},${b[1]}`;
+}
+function curveToward(a,b,c,amt){
+ const mx=(a[0]+b[0])/2, my=(a[1]+b[1])/2; let dx=c[0]-mx, dy=c[1]-my; const L=Math.hypot(dx,dy)||1;
+ return `M${a[0]},${a[1]} Q${(mx+dx/L*amt).toFixed(1)},${(my+dy/L*amt).toFixed(1)} ${b[0]},${b[1]}`;
+}
+function polar(cx,cy,r,a){ return [cx+r*Math.cos(a), cy+r*Math.sin(a)]; }
+// five-pointed star path, used for the mastery badge on completed topic nodes
+function starPath(cx,cy,rOuter,rInner,points){
+ let d='';
+ for(let i=0;i<points*2;i++){
+   const r = i%2 ? rInner : rOuter;
+   const a = -Math.PI/2 + i*Math.PI/points;
+   d += (i?'L':'M') + (cx+r*Math.cos(a)).toFixed(2) + ',' + (cy+r*Math.sin(a)).toFixed(2);
+ }
+ return d+'Z';
+}
+function sampleCubic(p0,p1,p2,p3,n){ const o=[]; for(let i=0;i<n;i++){ const s=i/(n-1),a=1-s;
+ o.push([a*a*a*p0[0]+3*a*a*s*p1[0]+3*a*s*s*p2[0]+s*s*s*p3[0], a*a*a*p0[1]+3*a*a*s*p1[1]+3*a*s*s*p2[1]+s*s*s*p3[1]]); } return o; }
+function lighten(hex,amt){ const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+ const L=v=>Math.round(v+(255-v)*amt); return `rgb(${L(r)},${L(g)},${L(b)})`; }
+
+function buildBrain(){
+ const g=document.getElementById('brain');
+ g.setAttribute('filter','url(#neonGlow)');
+ // ONE continuous contour: cerebrum -> occipital -> cerebellum bulge -> notch -> brainstem stalk -> temporal -> front
+ const outline='M150,290 C145,230 165,176 216,150 C300,112 410,108 500,116 C580,134 626,156 656,196 C690,232 706,256 700,300 C696,344 712,372 714,402 C716,440 690,460 656,464 C620,468 596,462 580,452 C566,446 560,456 558,472 C556,494 540,512 516,514 C498,515 482,510 472,496 C458,470 450,440 446,418 C440,410 416,412 380,414 C336,418 300,422 288,414 C244,404 210,388 202,356 C198,330 160,332 150,290 Z';
+ const cs=document.getElementById('brainClipShape'); if(cs) cs.setAttribute('d', outline);
+ g.appendChild(el('path',{d:outline, fill:'url(#brainFill)', stroke:'#7fe6ff', 'stroke-width':'1.8', 'stroke-opacity':'0.9'}));
+
+ // Phase 3 finishing pass: the outline itself is unchanged (approved) — these are
+ // purely additive, clipped to that same silhouette, to read as grooved cortex
+ // rather than a flat outline. Two inner echoes of the exact contour (inset
+ // toward the center) plus a few short fold accents in open areas.
+ [[0.055,0.20],[0.12,0.12]].forEach(([frac,op])=>{
+   g.appendChild(el('path',{d:insetPathTowardCenter(outline,BRAIN_CENTER,frac), fill:'none', stroke:'#7fe6ff', 'stroke-width':'1', 'stroke-opacity':String(op), 'clip-path':'url(#brainClip)'}));
+ });
+ const grooves=[
+   'M258,192 Q322,164 384,186',
+   'M478,148 Q548,128 608,153',
+   'M300,362 Q345,384 392,374',
+   'M566,300 Q604,326 588,362',
+ ];
+ grooves.forEach(d=>{
+   g.appendChild(el('path',{d, fill:'none', stroke:'#7fe6ff', 'stroke-width':'1', 'stroke-opacity':'0.15', 'stroke-linecap':'round', 'clip-path':'url(#brainClip)'}));
+ });
+}
+function insetPathTowardCenter(pathStr, center, frac){
+ return pathStr.replace(/(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/g, (m,xs,ys)=>{
+   const x=parseFloat(xs), y=parseFloat(ys);
+   const nx=x+(center[0]-x)*frac, ny=y+(center[1]-y)*frac;
+   return `${nx.toFixed(1)},${ny.toFixed(1)}`;
+ });
+}
+
+function buildMap(){
+ buildBrain();
+ const lG=document.getElementById('lines'), nG=document.getElementById('nodes'), pG=document.getElementById('pulses');
+ lG.setAttribute('clip-path','url(#brainClip)');
+ lG.setAttribute('filter','url(#axonGlow)');
+ pG.setAttribute('clip-path','url(#brainClip)');
+
+ ALL_EDGES.forEach(([a,b,kind],i)=>{
+   lG.appendChild(el('path',{id:'edge-'+i, class:'axon', d:curveToward(POS[a],POS[b],BRAIN_CENTER, kind==='c'?56:16), fill:'none', stroke:CY,
+     'stroke-width': kind==='c'?'1.3':'0.7', 'stroke-opacity': kind==='c'?'0.26':'0.1', 'data-a':a, 'data-b':b}));
+ });
+
+ TOPIC_IDS.forEach(id=>{
+   const [cx,cy]=POS[id], col=COLORS[id];
+   const g=el('g',{class:'node-g', id:'node-'+id}); g.style.cursor='pointer';
+   g.addEventListener('click',()=>openTopicPanel(id));
+   g.addEventListener('mouseenter',()=>highlightEdges(id,true));
+   g.addEventListener('mouseleave',()=>highlightEdges(id,false));
+
+   // subcat satellite neurons as a tidy halo (bottom gap reserved for the label).
+   // Dots use a fixed angular step so spacing looks identical on every topic no
+   // matter how many subtopics exist; the fan simply grows wider with more of
+   // them, and only tightens if it would otherwise reach into the label gap.
+   const subs=SUBCATS[id]||[];
+   const n=subs.length, rSat=R+13;
+   const gap=48*Math.PI/180;                  // reserved arc at the bottom
+   const maxSpan=2*Math.PI-2*gap;             // usable arc
+   const STEP=13*Math.PI/180;                 // preferred spacing between dots
+   const span=n>1 ? Math.min(STEP*(n-1), maxSpan) : 0;
+   const top=-Math.PI/2;                      // fan is centred on the top
+   const satG=el('g',{id:'sat-'+id});
+   subs.forEach((s,i)=>{
+     const a = n>1 ? (top - span/2 + span*(i/(n-1))) : top;
+     const [sx,sy]=polar(cx,cy,rSat,a), [ex,ey]=polar(cx,cy,R+2,a);
+     satG.appendChild(el('line',{id:`satline-${id}-${i}`, x1:ex,y1:ey,x2:sx,y2:sy, stroke:col, 'stroke-width':'0.7', 'stroke-opacity':'0.16'}));
+     satG.appendChild(el('circle',{id:`sat-${id}-${i}`, cx:sx, cy:sy, r:'2.4', fill:'#0a1020', stroke:col, 'stroke-width':'1.1', 'stroke-opacity':'0.35'}));
+   });
+   g.appendChild(satG);
+
+   g.appendChild(el('circle',{id:'glow-'+id, class:'node-glow breathe', cx, cy, r:R+3, fill:col, opacity:'0', filter:'url(#softGlow)'}));
+   const circ=2*Math.PI*(R+6);
+   g.appendChild(el('circle',{cx, cy, r:R+6, fill:'none', stroke:'rgba(255,255,255,0.07)', 'stroke-width':'2.5'}));
+   g.appendChild(el('circle',{id:'ring-'+id, cx, cy, r:R+6, fill:'none', stroke:col, 'stroke-width':'2.6', 'stroke-linecap':'round',
+     'stroke-dasharray':`0 ${circ}`, transform:`rotate(-90 ${cx} ${cy})`, style:'transition:stroke-dasharray 0.7s cubic-bezier(0.16,1,0.3,1)'}));
+   g.appendChild(el('circle',{id:'c-'+id, cx, cy, r:R, fill:'#070c18', stroke:col, 'stroke-width':'2.2'}));
+   // inner dark disc → guarantees icon contrast even as body tint rises
+   g.appendChild(el('circle',{cx, cy, r:R-7, fill:'#060c17', opacity:'0.92'}));
+   // bright, enlarged icon
+   const tmp=el('g',{}); tmp.innerHTML=iconSvg(id,cx,cy,lighten(col,0.55));
+   const ig=el('g',{transform:`translate(${cx},${cy}) scale(1.2) translate(${-cx},${-cy})`});
+   while(tmp.firstChild) ig.appendChild(tmp.firstChild);
+   g.appendChild(ig);
+   // label + pct
+   const lbl=el('text',{class:'node-label', x:cx, y:cy+R+15, 'text-anchor':'middle', 'font-size':'12', 'font-weight':'700', fill:col, 'font-family':'var(--font-sans)', opacity:'0.95'}); lbl.textContent=LABELS[id]; g.appendChild(lbl);
+   const pv=el('text',{id:'pv-'+id, x:cx, y:cy+R+27, 'text-anchor':'middle', 'font-size':'9.5', 'font-weight':'600', fill:col, 'font-family':'var(--font-mono)'}); g.appendChild(pv);
+   // mastery star — sits in the node's upper-right corner, revealed at 100%
+   const starA=-Math.PI/4;                       // 45° up-right
+   const [stx,sty]=polar(cx,cy,R+7,starA);
+   const starG=el('g',{id:'star-'+id, class:'mastery-star', opacity:'0', style:'transition:opacity .5s ease'});
+   starG.appendChild(el('circle',{cx:stx, cy:sty, r:'7.6', fill:'#070c18', stroke:col, 'stroke-width':'1.6'}));
+   const sp=el('path',{d:starPath(stx,sty,6.2,2.9,5), fill:col, stroke:'none'});
+   sp.setAttribute('filter','url(#neonGlow)');
+   starG.appendChild(sp);
+   g.appendChild(starG);
+   g.appendChild(el('circle',{class:'node-hit', cx, cy, r:R}));
+   nG.appendChild(g);
+ });
+
+ // core YOU (on brainstem) — locked until 84% of core-topic XP is collected
+ const [yx,yy]=POS.you;
+ const yg=el('g',{id:'node-you', class:'node-g'}); yg.style.cursor='pointer';
+ yg.addEventListener('click',()=>{ if(youUnlockedNow()) openTopicPanel('you'); });
+ yg.appendChild(el('circle',{cx:yx, cy:yy, r:'48', fill:'none', stroke:CY, 'stroke-width':'1', opacity:'0.12'}));
+ yg.appendChild(el('circle',{class:'breathe', cx:yx, cy:yy, r:'38', fill:CY, opacity:'0.06', filter:'url(#softGlow)'}));
+ yg.appendChild(el('circle',{id:'you-ring', cx:yx, cy:yy, r:'34', fill:'none', stroke:CY, 'stroke-width':'2.2', 'stroke-linecap':'round',
+   'stroke-dasharray':'0 999', transform:`rotate(-90 ${yx} ${yy})`, style:'transition:stroke-dasharray 0.7s cubic-bezier(0.16,1,0.3,1)'}));
+ yg.appendChild(el('circle',{cx:yx, cy:yy, r:'31', fill:'url(#coreGrad)', stroke:CY, 'stroke-width':'2.6'}));
+ [['YOU',5,'15','800','0.14em']].forEach(([txt,dy,fs,fw,ls])=>{
+   const t=el('text',{x:yx, y:yy+parseInt(dy), 'text-anchor':'middle', 'font-size':fs, 'font-weight':fw, fill:CY, 'font-family':'var(--font-sans)', 'letter-spacing':ls});
+   t.textContent=txt; yg.appendChild(t);
+ });
+ // lock / progress sit inside the YOU disc, directly under the label
+ const youLock=el('text',{id:'you-lock', x:yx, y:yy+22, 'text-anchor':'middle', 'font-size':'11'}); youLock.textContent='🔒'; yg.appendChild(youLock);
+ const youPct=el('text',{id:'you-pct', x:yx, y:yy+22, 'text-anchor':'middle', 'font-size':'9.5', 'font-weight':'600', fill:'#6b7d93', 'font-family':'var(--font-mono)', opacity:'0'}); yg.appendChild(youPct);
+ nG.appendChild(yg);
+
+ // hologram emitter device under the YOU node (where the lock used to sit):
+ // the projector the brain "hologram" beams out of. Drawn in map coordinates
+ // so it scales and moves with the brain in every view. Purely decorative.
+ const ex=yx, ey=yy+64;
+ const hg=el('g',{id:'holo-emitter', 'pointer-events':'none'});
+ hg.appendChild(el('ellipse',{cx:ex, cy:ey, rx:'30', ry:'9', fill:CY, opacity:'0.10', filter:'url(#softGlow)'}));
+ hg.appendChild(el('ellipse',{cx:ex, cy:ey, rx:'32', ry:'9.5', fill:'none', stroke:CY, 'stroke-width':'0.9', 'stroke-opacity':'0.22', 'stroke-dasharray':'5 8'}));
+ hg.appendChild(el('ellipse',{cx:ex, cy:ey, rx:'25', ry:'7.4', fill:'none', stroke:CY, 'stroke-width':'1', 'stroke-opacity':'0.38'}));
+ hg.appendChild(el('ellipse',{class:'holo-pulse', cx:ex, cy:ey, rx:'19', ry:'5.6', fill:'none', stroke:CY, 'stroke-width':'1'}));
+ hg.appendChild(el('ellipse',{cx:ex, cy:ey, rx:'19', ry:'5.6', fill:'rgba(127,230,255,0.10)', stroke:CY, 'stroke-width':'1.4', 'stroke-opacity':'0.75'}));
+ hg.appendChild(el('ellipse',{cx:ex, cy:ey, rx:'10', ry:'2.9', fill:'rgba(191,242,255,0.22)', stroke:'#bdf2ff', 'stroke-width':'0.8', 'stroke-opacity':'0.8'}));
+ hg.appendChild(el('circle',{cx:ex, cy:ey-1.2, r:'6.5', fill:CY, opacity:'0.35', filter:'url(#softGlow)'}));
+ hg.appendChild(el('circle',{cx:ex, cy:ey-1.2, r:'2.4', fill:'#eaffff'}));
+ nG.appendChild(hg);
+
+ buildPulses(pG);
+ refreshMapGlow();
+}
+
+function buildPulses(pG){
+ if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+ ALL_EDGES.forEach(([a,b,kind],i)=>{
+   const dur=(4 + (i%6)*0.45).toFixed(2);
+   const c=el('circle',{class:'pulse', r: kind==='c'?'2.2':'1.8', fill:'#dffaff', opacity: kind==='c'?'0.65':'0.5'});
+   const am=el('animateMotion',{dur:dur+'s', begin:((i*0.31)%dur).toFixed(2)+'s', repeatCount:'indefinite'});
+   const mp=el('mpath',{}); const href='#edge-'+i; mp.setAttributeNS('http://www.w3.org/1999/xlink','href',href); mp.setAttribute('href',href);
+   am.appendChild(mp); c.appendChild(am); pG.appendChild(c);
+ });
+}
+
+function refreshMapGlow(){
+ const seen=getSeen();
+ TOPIC_IDS.forEach(id=>{
+   const s=STATS.byTopic[id]||{total:0,done:0,subcats:{}}; const p=pct(s.done,s.total);
+   const ring=document.getElementById('ring-'+id);
+   if(ring){ const circ=2*Math.PI*(R+6); ring.setAttribute('stroke-dasharray', `${circ*p/100} ${circ}`); }
+   const glow=document.getElementById('glow-'+id);
+   if(glow){ glow.setAttribute('opacity', s.total? (0.12 + 0.46*p/100).toFixed(2) : '0'); glow.setAttribute('r', R+3+p*0.12); }
+   const pv=document.getElementById('pv-'+id); if(pv) pv.textContent = s.total? `${p}%` : '';
+   // mastery star: only once every module in the topic is done
+   const star=document.getElementById('star-'+id);
+   if(star) star.setAttribute('opacity', (s.total>0 && s.done>=s.total) ? '1' : '0');
+   const body=document.getElementById('c-'+id);
+   if(body && (!activeTopic || activeTopic!==id)){ body.setAttribute('fill', s.total? hexA(COLORS[id], 0.06+0.10*p/100) : '#070c18'); body.setAttribute('stroke',COLORS[id]); body.setAttribute('stroke-width','2.2'); }
+   (SUBCATS[id]||[]).forEach((sub,i)=>{
+     const dot=document.getElementById(`sat-${id}-${i}`); if(!dot) return;
+     const ss=(s.subcats&&s.subcats[sub])||{total:0,done:0};
+     // Every subtopic that exists (admin-managed list) gets a dot, so the halo
+     // is always an unbroken ring that scales with the subtopic count. A
+     // subtopic that has no modules yet has nothing of its own to complete, so
+     // it follows the parent topic instead — that way a 100 % topic never
+     // shows dark "pending" dots.
+     const done = ss.total>0 ? ss.done>=ss.total : (s.total>0 && s.done>=s.total);
+     const partial = ss.total>0 && ss.done>0 && ss.done<ss.total;
+     if(done){ dot.setAttribute('fill', COLORS[id]); dot.setAttribute('stroke-opacity','1'); dot.setAttribute('r','3.1'); }
+     else if(partial){ dot.setAttribute('fill', hexA(COLORS[id],0.5)); dot.setAttribute('stroke-opacity','0.85'); dot.setAttribute('r','2.7'); }
+     else { dot.setAttribute('fill','#0a1020'); dot.setAttribute('stroke-opacity','0.3'); dot.setAttribute('r','2.4'); }
+   });
+ });
+
+ // YOU node: locked until 84% of core-topic XP is collected
+ const m=computeXpModel();
+ const youRing=document.getElementById('you-ring');
+ if(youRing){
+   const circ=2*Math.PI*34, yp=m.youTotal? pct(m.youDone,m.youTotal):0;
+   youRing.setAttribute('stroke-dasharray', m.youUnlocked? `${circ*yp/100} ${circ}` : `0 ${circ}`);
+ }
+ const youLock=document.getElementById('you-lock'), youPct=document.getElementById('you-pct'), youNode=document.getElementById('node-you');
+ if(youLock&&youPct){
+   youLock.style.opacity = m.youUnlocked? '0' : '0.85';
+   youPct.style.opacity = m.youUnlocked? '0.9' : '0';
+   if(m.youUnlocked) youPct.textContent = m.youTotal? `${pct(m.youDone,m.youTotal)}%` : 'READY';
+ }
+ if(youNode) youNode.style.opacity = m.youUnlocked? '1' : '0.55';
+}
+function highlightEdges(id,on){
+ document.querySelectorAll('#lines .axon').forEach(ax=>{ if(ax.getAttribute('data-a')===id||ax.getAttribute('data-b')===id) ax.classList.toggle('lit',on); });
+}
+
+// ===== navigation =====
+function showPage(p) {
+ document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+ document.querySelectorAll('.ib-btn').forEach(el=>el.classList.remove('active'));
+ document.getElementById('page-'+p).classList.add('active');
+ document.getElementById('ib-'+p).classList.add('active');
+ if(p==='library')    buildLibPage('articles','lib-wrap');
+ if(p==='flashcards') buildLibPage('flashcards','fc-wrap');
+ if(p==='challenges') buildLibPage('challenges','ch-wrap');
+ if(p==='diary')      loadDiaryEntries();
+}
+
+let activeTopic=null,activeSubcat=null,activeTab='article',activeItems=[];
+
+function openTopicPanel(id){
+ activeTopic=id;activeSubcat=null;activeTab='article';
+ refreshMapGlow();
+ buildMetrics(); // reflects the open topic in the dock (active region row + brighter donut slice)
+ const cc=document.getElementById('c-'+id);
+ if(cc){cc.setAttribute('fill',hexA(COLORS[id],0.22));cc.setAttribute('stroke','#fff');cc.setAttribute('stroke-width','2.6');}
+ document.getElementById('cp-dot').style.color=COLORS[id];
+ document.getElementById('cp-dot').style.background=COLORS[id];
+ document.getElementById('cp-title').textContent=LABELS[id];
+ document.getElementById('cpanel').style.setProperty('--panel-accent', COLORS[id]);
+ renderPanelTabs();
+ document.getElementById('cpanel').classList.add('open');
+ loadPanel();
+}
+function renderPanelTabs(){
+ document.getElementById('cp-tabs').innerHTML=
+   [['article','Library'],['flashcard','Cards'],['challenge','Quests']].map(([id,lbl])=>
+     `<button class="cp-tab${id===activeTab?' active':''}" onclick="switchPanelTab('${id}')">${lbl}</button>`).join('');
+}
+function switchPanelTab(tab){activeTab=tab;activeSubcat=null;renderPanelTabs();loadPanel();}
+
+async function loadPanel(){
+ const body=document.getElementById('cp-body');
+ body.innerHTML='<div class="loading">Syncing node vectors…</div>';
+ try{
+   const col = activeTab==='flashcard'?'flashcards':activeTab==='challenge'?'challenges':'articles';
+   const all = RAW.items.length ? RAW.items.filter(i=>i._col===col) : await fsAll(col);
+   const items=all.filter(i=>i.topic===activeTopic&&(activeSubcat?i.subcat===activeSubcat:true));
+   activeItems=items;
+   const seen=getSeen(), done=items.filter(i=>seen[i.id]).length;
+   updateProg(done,items.length,COLORS[activeTopic]);
+   const subs=(SUBCATS[activeTopic]||[]).filter(s=>all.some(i=>i.topic===activeTopic&&i.subcat===s));
+   let html='';
+   if(subs.length){
+     html+=`<div class="sub-pills"><select class="lib-subcat-select" onchange="filterSub(this.value||null)">
+       <option value=""${!activeSubcat?' selected':''}>All Subtopics</option>
+       ${subs.map(s=>`<option value="${escHtml(s)}"${activeSubcat===s?' selected':''}>${escHtml(s)}</option>`).join('')}
+     </select></div>`;
+   }
+   if(!items.length){html+='<div class="empty">No modules deployed in this topic yet.</div>';body.innerHTML=html;body.scrollTop=0;return;}
+   const acc=hexA(COLORS[activeTopic],1);
+   if(activeTab==='flashcard'){
+     html+=items.map((item,i)=>`
+<div class="cc" style="--cc-accent:${acc}" onclick="openFC(${i})">
+<div class="cc-title">${item.title}<span class="cc-done${seen[item.id]?' done':''}">✓</span></div>
+<div class="cc-meta"><i data-lucide="layers" style="width:12px"></i> ${item.pairs?.length||0} cards${item.subcat?' · '+item.subcat:''}</div>
+</div>`).join('');
+   } else if(activeTab==='challenge'){
+     html+=items.map((item,i)=>`
+<div class="cc" style="--cc-accent:${acc}" onclick="openChallenge(${i})">
+<div class="cc-title">${item.title}<span class="cc-done${seen[item.id]?' done':''}">✓</span></div>
+<div class="cc-meta"><i data-lucide="zap" style="width:12px"></i> ${item.options?.length||0} outcomes${item.subcat?' · '+item.subcat:''}</div>
+</div>`).join('');
+   } else {
+     html+=items.map((item,i)=>`
+<div class="cc" style="--cc-accent:${acc}" onclick="openArt(${i})">
+<div class="cc-title">${item.title}<span class="cc-done${seen[item.id]?' done':''}">✓</span></div>
+<div class="cc-meta"><i data-lucide="file-text" style="width:12px"></i> ${(item.content||'').replace(/[#*_\n]/g,' ').substring(0,72)}…</div>
+</div>`).join('');
+   }
+   body.innerHTML=html; body.scrollTop=0; lucide.createIcons();
+ }catch(e){body.innerHTML=`<div class="empty">⚠ Core link error: ${e.message}</div>`;}
+}
+function filterSub(s){activeSubcat=s;loadPanel();}
+function updateProg(done,total,color){
+ const w=document.getElementById('prog-wrap');
+ if(!total){w.style.display='none';return;}
+ w.style.display='block';
+ const pp=Math.round(done/total*100);
+ document.getElementById('prog-label').textContent=`Integration: ${done} / ${total}`;
+ document.getElementById('prog-pct').textContent=pp+'%';
+ const f=document.getElementById('prog-fill'); f.style.width=pp+'%'; f.style.background=color;
+}
+// ===== linked modules (article → its flashcards & quest on the same subtopic) =====
+async function findSiblings(item){
+ if(!item||!item.subcat) return {};
+ async function look(col){
+   let pool=(RAW.items||[]).filter(x=>x._col===col);
+   if(!pool.length){ try{ pool=await fsAll(col); }catch(e){ pool=[]; } }
+   return pool.find(x=>x.topic===item.topic && x.subcat===item.subcat)||null;
+ }
+ const [fc,ch]=await Promise.all([look('flashcards'),look('challenges')]);
+ return {fc,ch};
+}
+function linkedFooter(fc,ch,onFc,onCh){
+ if(!fc&&!ch) return '';
+ let b='';
+ if(fc) b+=`<button class="linked-btn" style="--lk:var(--c-cards)" onclick="${onFc}"><i data-lucide="layers"></i><span class="lk-txt"><span class="lk-t">Flashcards</span><span class="lk-s">${fc.pairs?.length||0} cards on this subtopic</span></span><i data-lucide="chevron-right" class="lk-arrow"></i></button>`;
+ if(ch) b+=`<button class="linked-btn" style="--lk:var(--c-challenges)" onclick="${onCh}"><i data-lucide="zap"></i><span class="lk-txt"><span class="lk-t">Quest</span><span class="lk-s">Test yourself in a scenario</span></span><i data-lucide="chevron-right" class="lk-arrow"></i></button>`;
+ return `<div class="linked-block"><div class="linked-head"><i data-lucide="git-branch" style="width:13px;height:13px"></i> Continue this subtopic</div>${b}</div>`;
+}
+async function getItemCached(col,id){
+ let it=(RAW.items||[]).find(x=>x._col===col&&x.id===id);
+ if(it) return it;
+ const snap=await db.collection(col).doc(id).get(); return {id:snap.id,...snap.data()};
+}
+function fcListHtml(item){
+ return (item.pairs||[]).map(p=>`<div class="fc-card" onclick="this.classList.toggle('flipped')"><div class="fc-front">${p.q}</div><div class="fc-back">${p.a}</div><div class="fc-hint">tap to flip</div></div>`).join('');
+}
+// map side-panel context — renders into cp-body, back returns to the article
+async function panelShowLinked(col,id,backArtIdx){
+ const item=await getItemCached(col,id); markSeen(item.id);
+ const back=`<button class="back-btn" onclick="openArt(${backArtIdx})">← Back to article</button>`;
+ const body=document.getElementById('cp-body');
+ if(col==='flashcards'){
+   body.innerHTML=back+`<div style="font-size:13px;color:var(--text-dim);margin-bottom:14px;font-weight:700;">${item.title}</div>`+fcListHtml(item);
+ } else {
+   body.innerHTML=challengeView(item,back);
+ }
+ body.scrollTop=0;
+ lucide.createIcons();
+}
+// full library-page context — renders into wrapper, back returns to the article
+async function libShowLinked(col,id,wrapperId,backArtId){
+ const item=await getItemCached(col,id); markSeen(item.id);
+ const el=document.getElementById(wrapperId);
+ const back=`<button class="back-btn" onclick="libOpenArt('${backArtId}','${wrapperId}','articles')">← Back to article</button>`;
+ if(col==='flashcards'){
+   el.innerHTML=`<div style="max-width:620px;margin:0 auto;">`+back+`<div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:16px;">${item.title}</div>`+fcListHtml(item)+`</div>`;
+ } else {
+   el.innerHTML=`<div style="max-width:720px;margin:0 auto;">`+challengeView(item,back)+`</div>`;
+ }
+ el.scrollTop=0;
+ lucide.createIcons();
+}
+async function openArt(idx){
+ const item=activeItems[idx];markSeen(item.id);
+ const {fc,ch}=await findSiblings(item);
+ const foot=linkedFooter(fc,ch,`panelShowLinked('flashcards','${fc?fc.id:''}',${idx})`,`panelShowLinked('challenges','${ch?ch.id:''}',${idx})`);
+ document.getElementById('cp-body').innerHTML=`
+<button class="back-btn" onclick="loadPanel()">← Topic modules</button>
+<div class="article-reader"><h1>${item.title}</h1>
+   ${item.image_url?`<img src="${item.image_url}" style="width:100%; border-radius:12px; margin-bottom:14px;"/>`:''}
+   ${md(stripH1(item.content||''))}${foot}</div>`;
+ document.getElementById('cp-body').scrollTop=0;
+ lucide.createIcons();
+}
+function openFC(idx){
+ const item=activeItems[idx];markSeen(item.id);
+ if(!item.pairs?.length){document.getElementById('cp-body').innerHTML='<div class="empty">Deck empty.</div>';return;}
+ document.getElementById('cp-body').innerHTML=`
+<button class="back-btn" onclick="loadPanel()">← Topic modules</button>
+<div style="font-size:13px;color:var(--text-dim);margin-bottom:14px; font-weight:700;">${item.title}</div>
+   ${item.pairs.map(p=>`<div class="fc-card" onclick="this.classList.toggle('flipped')"><div class="fc-front">${p.q}</div><div class="fc-back">${p.a}</div><div class="fc-hint">tap to flip</div></div>`).join('')}`;
+ document.getElementById('cp-body').scrollTop=0;
+}
+function closePanel(){
+ document.getElementById('cpanel').classList.remove('open');
+ activeTopic=null; refreshMapGlow(); buildMetrics();
+}
+// Clicking anywhere on the Map page outside the open reading panel closes it —
+// except on the controls that open/switch it (topic nodes, sidebar topic rows,
+// donut segments), which already handle their own panel state. Uses
+// composedPath() instead of panel.contains(e.target): opening content inside
+// the panel rewrites cp-body's innerHTML as part of this same click (via the
+// item's own onclick, which runs before this listener), which detaches the
+// original target from the document — contains() would then wrongly see it
+// as "outside" and close the panel right after it opened the content.
+// composedPath() is captured at dispatch time, before any of that mutation.
+document.addEventListener('click', (e)=>{
+ const panel=document.getElementById('cpanel');
+ const mapPage=document.getElementById('page-map');
+ if(!panel || !panel.classList.contains('open')) return;
+ if(!mapPage || !mapPage.classList.contains('active')) return;
+ const path=e.composedPath ? e.composedPath() : [e.target];
+ if(path.includes(panel)) return;
+ if(e.target.closest && (e.target.closest('.node-g') || e.target.closest('.region-row') || e.target.closest('.donut-seg'))) return;
+ closePanel();
+});
+
+// ===== content dock: Map-style "Mind Status" stat panel, reused on Library/
+// Flashcards/Challenges, filtered to that page's content type. Mirrors the
+// sizing/markup of the Map page's own #metrics-dock so the panel lines up
+// consistently across all four pages, but swaps its content: when no topic is
+// selected it shows the same topics+progress-bar list; once the user drills
+// into a topic it swaps that list for the topic's own subtopics (full name +
+// checkmark) and drops the Strongest/Focus-next KPI cards entirely, so the
+// (often much longer) subtopic list gets the extra room instead.
+function toggleDock(id){
+ const d=document.getElementById(id); if(!d) return;
+ const isOpen=d.classList.toggle('open');
+ // hide the "Status" toggle button while its dock is open (the panel gets
+ // its own X close button instead) — reappears once the dock closes. Map
+ // uses the floating .dock-toggle; Library/Cards/Challenges use the inline
+ // .lib-status-btn generated inside the filter bar.
+ const layout=d.closest('.map-layout');
+ const toggleBtn=layout ? (layout.querySelector('.dock-toggle')||layout.querySelector('.lib-status-btn')) : null;
+ if(toggleBtn) toggleBtn.style.display = isOpen ? 'none' : '';
+}
+const DOCK_MAP = { 'lib-wrap':{pageKey:'library', col:'articles'}, 'fc-wrap':{pageKey:'flashcards', col:'flashcards'}, 'ch-wrap':{pageKey:'challenges', col:'challenges'} };
+const DOCK_LABELS = { library:'Library Status', flashcards:'Card Status', challenges:'Quest Status' };
+function refreshContentDock(wrapperId){
+ const m=DOCK_MAP[wrapperId]; if(!m) return;
+ buildContentDock(m.pageKey, m.col, wrapperId);
+}
+function buildDonutGeneric(svgId, stats, wrapperId){
+ const svg=document.getElementById(svgId); if(!svg) return;
+ const cx=88,cy=88,r=66,sw=13,gap=5,seg=360/TOPICS.length;
+ let out='';
+ TOPICS.forEach((t,i)=>{
+   const s=stats.byTopic[t.id]||{total:0,done:0}; const p=pct(s.done,s.total);
+   const a0=i*seg+gap/2, a1=(i+1)*seg-gap/2, dim=s.total===0;
+   out+=`<path d="${arcPath(cx,cy,r,a0,a1)}" fill="none" stroke="${t.color}" stroke-opacity="${dim?0.1:0.16}" stroke-width="${sw}" stroke-linecap="round"/>`;
+   if(s.total>0 && p>0){
+     const aF=a0+(a1-a0)*p/100;
+     out+=`<path d="${arcPath(cx,cy,r,a0,Math.max(a0+0.4,aF))}" fill="none" stroke="${t.color}" stroke-width="${sw}" stroke-linecap="round" onclick="libSetTopicFilter('${wrapperId}','${t.id}')" style="cursor:pointer"><title>${t.label}: ${p}% (${s.done}/${s.total})</title></path>`;
+   }
+ });
+ svg.innerHTML=out;
+}
+function dockSubcatClick(wrapperId, subcat){
+ const filt=LIB_FILTERS[wrapperId]||{};
+ libSetSubcatFilter(wrapperId, filt.subcat===subcat ? '' : subcat);
+}
+function buildContentDock(pageKey, col, wrapperId){
+ const container=document.getElementById('dock-'+pageKey); if(!container) return;
+ const stats=statsForCol(col);
+ const filt=LIB_FILTERS[wrapperId]||{topic:'all',subcat:''};
+ const o=stats.overall, p=pct(o.done,o.total);
+ const topicsWith=TOPIC_IDS.filter(id=>(stats.byTopic[id]||{}).total>0).length;
+ const donutId='dock-donut-'+pageKey;
+ // Drilled into a topic → the panel ends where its subtopic list ends, rather
+ // than stretching down the whole page with empty space underneath.
+ container.classList.toggle('fit-content', filt.topic!=='all');
+
+ let listHtml, sectionTitle, hint;
+ if(filt.topic!=='all'){
+   const topicObj=TOPICS.find(t=>t.id===filt.topic);
+   const t=stats.byTopic[filt.topic]||{subcats:{}};
+   const subs=Object.keys(t.subcats||{}).filter(s=>t.subcats[s].total>0);
+   sectionTitle=topicObj?topicObj.label:'Topic'; hint='tap to filter';
+   listHtml=`<div class="dock-back-row" onclick="libSetTopicFilter('${wrapperId}','all')"><i data-lucide="arrow-left" style="width:12px"></i> All topics</div>` +
+     (subs.length? subs.map(s=>{
+       const ss=t.subcats[s]; const complete=ss.total>0 && ss.done>=ss.total; const active=filt.subcat===s;
+       return `<div class="subtopic-row${active?' active':''}" data-subcat="${escHtml(s)}" onclick="dockSubcatClick('${wrapperId}', this.dataset.subcat)" style="--rc:${topicObj?topicObj.color:'var(--accent)'}">
+         <span class="subtopic-check${complete?' done':''}">${complete?'✓':''}</span>
+         <span class="subtopic-name">${escHtml(s)}</span>
+         <span class="subtopic-count">${ss.done}/${ss.total}</span>
+       </div>`;
+     }).join('') : `<div class="empty" style="padding:16px 8px;font-size:11.5px;">No subtopics yet.</div>`);
+ } else {
+   sectionTitle='Topics'; hint='tap to open';
+   listHtml=TOPICS.map(t=>{
+     const s=stats.byTopic[t.id]||{total:0,done:0}; const pp=pct(s.done,s.total); const dim=s.total===0;
+     return `<div class="region-row" onclick="libSetTopicFilter('${wrapperId}','${t.id}')" style="--rc:${t.color};${dim?'opacity:.42':''}">
+       <span class="region-dot" style="background:${t.color};box-shadow:0 0 8px ${t.color}"></span>
+       <span class="region-name">${t.label}</span>
+       <span class="region-bar"><span class="region-fill" style="width:${pp}%;background:${t.color}"></span></span>
+       <span class="region-val">${dim?'—':pp+'%'}</span>
+     </div>`;
+   }).join('');
+ }
+
+ container.innerHTML=`
+   <button class="dock-close" onclick="toggleDock('dock-${pageKey}')" aria-label="Close status panel"><i data-lucide="x" style="width:15px"></i></button>
+   <div class="dock-status">
+     <div class="dock-status-top">
+       <span class="dock-status-rank"><b>—</b></span>
+       <span class="dock-status-xpnum">0 / 0 XP</span>
+     </div>
+     <div class="dock-status-xp-track"><div class="dock-status-xp-fill"></div></div>
+     <div class="dock-status-streak">⚡ 0-day streak</div>
+   </div>
+   <div class="md-header-row">
+     <div class="md-eyebrow"><i data-lucide="activity" style="width:13px"></i> ${DOCK_LABELS[pageKey]||'Status'}</div>
+     <div class="md-overall">
+       <div class="md-overall-bar"><div class="md-overall-fill" style="width:${p}%"></div></div>
+       <span class="md-overall-pct">${p}%</span>
+     </div>
+   </div>
+   <div class="md-activity-row">
+     <div class="donut-host-sm"><svg id="${donutId}" viewBox="0 0 176 176"></svg></div>
+     <div class="md-mastered">
+       <div class="big">${o.done} / ${o.total}</div>
+       <div class="sub">modules across ${topicsWith} active topic${topicsWith===1?'':'s'}</div>
+     </div>
+   </div>
+   <div class="md-section-title">${sectionTitle} <span class="hint">${hint}</span></div>
+   <div class="md-topics-list">${listHtml}</div>
+ `;
+ buildDonutGeneric(donutId, stats, wrapperId);
+ lucide.createIcons();
+ updateTopbar();
+}
+
+// Library pages (articles / flashcards / challenges): data is fetched once per
+// wrapper and cached; filter pills/dropdown just re-render from the cache so
+// switching topic/subtopic is instant and never re-hits Firestore.
+let LIB_CACHE={}, LIB_FILTERS={};
+async function buildLibPage(col, wrapperId){
+ const el=document.getElementById(wrapperId);
+ el.innerHTML='<div class="loading">Loading modules…</div>';
+ el.style.cssText='height:100%; overflow-y:auto; padding:18px 32px 22px;';
+ try{
+   const all=await fsAll(col);
+   LIB_CACHE[wrapperId]={col,all};
+   if(!LIB_FILTERS[wrapperId]) LIB_FILTERS[wrapperId]={topic:'all',subcat:''};
+   renderLibList(wrapperId);
+   refreshContentDock(wrapperId);
+ }catch(e){el.innerHTML=`<div class="empty">⚠ Architecture offline: ${e.message}</div>`;}
+}
+function libSetTopicFilter(wrapperId, topicId){
+ LIB_FILTERS[wrapperId]={topic:topicId, subcat:''};
+ renderLibList(wrapperId);
+ refreshContentDock(wrapperId);
+}
+function libSetSubcatFilter(wrapperId, subcat){
+ LIB_FILTERS[wrapperId].subcat=subcat;
+ renderLibList(wrapperId);
+ refreshContentDock(wrapperId);
+}
+// ===== item-map: map-page-style node network for Library/Flashcards/Challenges =====
+// Reduces a content item's title down to a short label for its node, and renders
+// a radial network (topic icon at the center, one node per article/flashcard/quest
+// scattered around it, connected by the same animated axon/pulse treatment as the
+// main brain map). Ring layout auto-adapts to however many items exist, so adding
+// or removing subtopics/content just reflows the network — no fixed positions.
+// Wraps a full title onto several short lines instead of truncating it, so the
+// complete content title is always readable under its node.
+function wrapLabelLines(title, maxChars=15){
+ const words=String(title||'').trim().split(/\s+/).filter(Boolean);
+ const lines=[]; let cur='';
+ words.forEach(w=>{
+   const test=cur?cur+' '+w:w;
+   if(test.length>maxChars && cur){ lines.push(cur); cur=w; }
+   else cur=test;
+ });
+ if(cur) lines.push(cur);
+ return lines.length?lines:[''];
+}
+function typeIconSvg(type,cx,cy,col){
+ const s=`fill="none" stroke="${col}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"`;
+ if(type==='article') return `<g ${s}>
+   <path d="M${cx-8},${cy-6} C${cx-8},${cy-7.4} ${cx-1.2},${cy-7.4} ${cx-0.6},${cy-5} L${cx-0.6},${cy+7} C${cx-1.2},${cy+4.8} ${cx-8},${cy+4.8} ${cx-8},${cy+6.2} Z"/>
+   <path d="M${cx+8},${cy-6} C${cx+8},${cy-7.4} ${cx+1.2},${cy-7.4} ${cx+0.6},${cy-5} L${cx+0.6},${cy+7} C${cx+1.2},${cy+4.8} ${cx+8},${cy+4.8} ${cx+8},${cy+6.2} Z"/>
+ </g>`;
+ if(type==='flashcard') return `<g ${s}>
+   <rect x="${cx-9}" y="${cy-8}" width="13" height="9" rx="2"/>
+   <rect x="${cx-4}" y="${cy-2}" width="13" height="9" rx="2"/>
+ </g>`;
+ if(type==='challenge') return `<polygon points="${cx+2},${cy-10} ${cx-6.5},${cy+1.5} ${cx-0.5},${cy+1.5} ${cx-2.5},${cy+10} ${cx+7},${cy-2.5} ${cx+1},${cy-2.5}" fill="${col}" fill-opacity="0.9" stroke="${col}" stroke-width="1" stroke-linejoin="round"/>`;
+ return '';
+}
+function buildItemMapBlock(topic, items, wrapperId, col, type, done){
+ const seen=getSeen();
+ const nodeR=23, centerR=40, r0=158, rStep=132, xScale=1.32;
+ const AXON=topic.color; // matches this map's own topic color
+ // ring layout: fill an inner ring first, then push extra items to progressively
+ // wider rings (capacity grows with ring so per-node arc length stays roughly
+ // even); alternating rings are rotated half a slot so nodes interleave instead
+ // of stacking radially, and each node remembers its own arc length so its
+ // label can be wrapped to fit that slot without bleeding into a neighbor.
+ const nodePos=[]; let idx=0, ring=0;
+ while(idx<items.length){
+   const capacity=Math.min(5+ring*4, items.length-idx);
+   const r=r0+ring*rStep;
+   const stagger=(ring%2)?(Math.PI/capacity):0;
+   const arcLen=(2*Math.PI*r)/capacity;
+   for(let k=0;k<capacity;k++) nodePos.push({angle:(2*Math.PI*k/capacity)-Math.PI/2+stagger, r, arcLen});
+   idx+=capacity; ring++;
+ }
+ const maxR=r0+Math.max(0,ring-1)*rStep+nodeR+40;
+ const H=maxR*2, W=maxR*2*xScale, cx=W/2, cy=H/2;
+ const uid=(wrapperId+'-'+topic.id).replace(/[^a-zA-Z0-9_-]/g,'');
+ let lines='', pulses='', nodes='';
+ items.forEach((item,i)=>{
+   const {angle,r,arcLen}=nodePos[i];
+   const x=cx+Math.cos(angle)*r*xScale, y=cy+Math.sin(angle)*r;
+   const eid=`im-e-${uid}-${i}`;
+   lines+=`<path id="${eid}" class="im-axon" d="M${cx.toFixed(1)},${cy.toFixed(1)} Q${((cx+x)/2).toFixed(1)},${((cy+y)/2).toFixed(1)} ${x.toFixed(1)},${y.toFixed(1)}" fill="none" stroke="${AXON}" stroke-width="1" stroke-opacity="0.22"/>`;
+   pulses+=`<circle class="im-pulse" r="1.8" fill="#dffaff" opacity="0.5"><animateMotion dur="${(4+(i%6)*0.4).toFixed(2)}s" begin="${((i*0.31)%4).toFixed(2)}s" repeatCount="indefinite"><mpath href="#${eid}"/></animateMotion></circle>`;
+   const done=!!seen[item.id];
+   // available label width per line ≈ its slot's arc length (capped both ways
+   // so long titles wrap tighter in crowded rings and don't balloon out in
+   // sparse ones — this is what keeps a label from bleeding into a neighbor)
+   const maxChars=Math.max(9, Math.min(19, Math.round(arcLen/7.6)));
+   const labelLines=wrapLabelLines(item.title, maxChars);
+   const labelTspans=labelLines.map((ln,li)=>`<tspan x="${x.toFixed(1)}" dy="${li===0?0:14}">${escHtml(ln)}</tspan>`).join('');
+   let onclick;
+   if(type==='flashcard') onclick=`libOpenFC('${item.id}','${wrapperId}')`;
+   else if(type==='challenge') onclick=`libOpenChallenge('${item.id}','${wrapperId}')`;
+   else onclick=`libOpenArt('${item.id}','${wrapperId}','${col}')`;
+   nodes+=`<g class="im-node" onclick="${onclick}" onmouseenter="document.getElementById('${eid}').classList.add('lit')" onmouseleave="document.getElementById('${eid}').classList.remove('lit')">
+     <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${nodeR+3}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="2"/>
+     <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${nodeR}" fill="${done?hexA(topic.color,0.22):'#070c18'}" stroke="${done?topic.color:'#000000'}" stroke-width="2"/>
+     ${typeIconSvg(type,x,y,lighten(topic.color,0.55))}
+     ${done?`<circle cx="${(x+nodeR-5).toFixed(1)}" cy="${(y-nodeR+5).toFixed(1)}" r="6.5" fill="${topic.color}"/><text x="${(x+nodeR-5).toFixed(1)}" y="${(y-nodeR+8).toFixed(1)}" text-anchor="middle" font-size="8.5" font-weight="700" fill="#06101f">✓</text>`:''}
+     <text x="${x.toFixed(1)}" y="${(y+nodeR+16).toFixed(1)}" text-anchor="middle" font-size="12.5" font-weight="600" fill="#cbd5e1" font-family="var(--font-sans)">${labelTspans}</text>
+     <title>${escHtml(item.title)}${item.subcat?' · '+escHtml(item.subcat):''}</title>
+   </g>`;
+ });
+ const pctDone=items.length?Math.round(done/items.length*100):0;
+ return `<div class="item-map" style="--tc:${topic.color}">
+   <div class="im-badge">
+     <span class="im-badge-icon"><svg viewBox="0 0 22 22">${iconSvg(topic.id,11,11,lighten(topic.color,0.55))}</svg></span>
+     <span class="im-badge-name" style="color:${topic.color}">${topic.label}</span>
+     <span class="im-badge-count">${done}/${items.length} · ${pctDone}%</span>
+   </div>
+   <div class="im-zoom-controls">
+     <button type="button" class="im-zoom-btn im-zoom-wheel" title="Enable scroll-to-zoom"><i data-lucide="mouse" style="width:12px"></i></button>
+     <button type="button" class="im-zoom-btn im-zoom-in" title="Zoom in">+</button>
+     <button type="button" class="im-zoom-btn im-zoom-out" title="Zoom out">−</button>
+     <button type="button" class="im-zoom-btn im-zoom-reset" title="Reset view"><i data-lucide="maximize" style="width:12px"></i></button>
+   </div>
+   <svg class="item-map-svg" viewBox="0 0 ${W.toFixed(0)} ${H.toFixed(0)}" preserveAspectRatio="xMidYMid meet">
+     <g class="im-lines">${lines}</g>
+     <g class="im-pulses">${pulses}</g>
+     <g class="im-center">
+       <circle class="breathe" cx="${cx}" cy="${cy}" r="${centerR+10}" fill="${topic.color}" opacity="0.1"/>
+       <circle cx="${cx}" cy="${cy}" r="${centerR}" fill="#070c18" stroke="${topic.color}" stroke-width="2.6"/>
+       ${iconSvg(topic.id,cx,cy,lighten(topic.color,0.55))}
+     </g>
+     <g class="im-nodes">${nodes}</g>
+   </svg>
+ </div>`;
+}
+// simple scrollable card list — the alternative to the pannable node network,
+// switched to via the map/list toggle (mainly meant for small screens where
+// panning/zooming a dense network is awkward)
+function buildItemListBlock(topic, items, wrapperId, col, type, done){
+ const seen=getSeen();
+ const acc=topic.color;
+ const rows=items.map(item=>{
+   const doneItem=!!seen[item.id];
+   let onclick, icon, meta;
+   if(type==='challenge'){ onclick=`libOpenChallenge('${item.id}','${wrapperId}')`; icon='zap'; meta=(item.options?.length||0)+' outcomes'; }
+   else if(type==='flashcard'){ onclick=`libOpenFC('${item.id}','${wrapperId}')`; icon='layers'; meta=(item.pairs?.length||0)+' cards'; }
+   else { onclick=`libOpenArt('${item.id}','${wrapperId}','${col}')`; icon='file-text'; meta=(item.content||'').replace(/[#*_\n]/g,' ').substring(0,60)+'…'; }
+   return `<div class="cc" style="--cc-accent:${acc}" onclick="${onclick}">
+<div class="cc-title">${escHtml(item.title)}<span class="cc-done${doneItem?' done':''}">✓</span></div>
+${item.subcat?`<div class="cc-subcat" style="color:${acc}">${escHtml(item.subcat)}</div>`:''}
+<div class="cc-meta"><i data-lucide="${icon}" style="width:12px"></i> ${escHtml(meta)}</div>
+</div>`;
+ }).join('');
+ const pctDone=items.length?Math.round(done/items.length*100):0;
+ return `<div class="item-map list-mode" style="--tc:${acc}">
+   <div class="lib-list-header">
+     <span class="im-badge-icon"><svg viewBox="0 0 22 22">${iconSvg(topic.id,11,11,lighten(acc,0.55))}</svg></span>
+     <span class="im-badge-name" style="color:${acc}">${topic.label}</span>
+     <span class="im-badge-count">${done}/${items.length} · ${pctDone}%</span>
+   </div>
+   <div class="lib-grid">${rows}</div>
+ </div>`;
+}
+// wires up pinch/drag/wheel pan+zoom on every rendered node-network map (skips
+// list-mode boxes, which have nothing to zoom). Touch-action starts as
+// pan-y (page scrolls normally); once zoomed past 1x it switches to none so
+// dragging pans the map instead of the page — reset/pinch back to 1x restores
+// normal scrolling. Mouse-wheel zoom is opt-in (off by default) via the small
+// mouse-icon toggle in the zoom controls: with it off, scrolling the wheel
+// over a map just scrolls the page like anywhere else — otherwise it's easy
+// to accidentally zoom a map while trying to scroll past it. Pinch-to-zoom on
+// touch is unaffected by this toggle since it can't be confused with a
+// one-finger scroll gesture.
+function initItemMapZoomAll(root){
+ root.querySelectorAll('.item-map:not(.list-mode)').forEach(box=>{
+   const svg=box.querySelector('.item-map-svg'); if(!svg) return;
+   let scale=1, tx=0, ty=0, wheelZoom=false;
+   const MIN=1, MAX=4;
+   function apply(){
+     svg.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`;
+     svg.style.touchAction = scale>1 ? 'none' : 'pan-y';
+   }
+   function clampScale(){ scale=Math.min(MAX,Math.max(MIN,scale)); if(scale<=1){scale=1;tx=0;ty=0;} }
+   let dragging=false,lastX=0,lastY=0;
+   svg.addEventListener('pointerdown', e=>{
+     if(scale<=1) return;
+     dragging=true; lastX=e.clientX; lastY=e.clientY;
+     try{svg.setPointerCapture(e.pointerId);}catch(err){}
+   });
+   svg.addEventListener('pointermove', e=>{
+     if(!dragging) return;
+     tx+=e.clientX-lastX; ty+=e.clientY-lastY;
+     lastX=e.clientX; lastY=e.clientY; apply();
+   });
+   ['pointerup','pointercancel','pointerleave'].forEach(ev=>svg.addEventListener(ev, ()=>{dragging=false;}));
+   box.addEventListener('wheel', e=>{
+     if(!wheelZoom) return; // default: let the wheel scroll the page like normal
+     e.preventDefault();
+     scale += (e.deltaY>0?-0.15:0.15);
+     clampScale(); apply();
+   }, {passive:false});
+   let pinchDist=null;
+   svg.addEventListener('touchstart', e=>{
+     if(e.touches.length===2){
+       pinchDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+     }
+   }, {passive:true});
+   svg.addEventListener('touchmove', e=>{
+     if(e.touches.length===2){
+       e.preventDefault();
+       const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+       if(pinchDist) scale *= d/pinchDist;
+       pinchDist=d; clampScale(); apply();
+     }
+   }, {passive:false});
+   svg.addEventListener('touchend', e=>{ if(e.touches.length<2) pinchDist=null; });
+   const zin=box.querySelector('.im-zoom-in'), zout=box.querySelector('.im-zoom-out'), zreset=box.querySelector('.im-zoom-reset'), zwheel=box.querySelector('.im-zoom-wheel');
+   if(zin) zin.onclick=()=>{scale+=0.4;clampScale();apply();};
+   if(zout) zout.onclick=()=>{scale-=0.4;clampScale();apply();};
+   if(zreset) zreset.onclick=()=>{scale=1;tx=0;ty=0;apply();};
+   if(zwheel) zwheel.onclick=()=>{
+     wheelZoom=!wheelZoom;
+     zwheel.classList.toggle('active', wheelZoom);
+     zwheel.title = wheelZoom ? 'Scroll-to-zoom is ON (click to disable)' : 'Enable scroll-to-zoom';
+   };
+   apply();
+ });
+}
+let LIB_VIEW_MODE={};
+function libToggleView(wrapperId){
+ LIB_VIEW_MODE[wrapperId]=(LIB_VIEW_MODE[wrapperId]==='list')?'map':'list';
+ renderLibList(wrapperId);
+}
+function libSetView(wrapperId, viewMode){
+ LIB_VIEW_MODE[wrapperId]=viewMode;
+ renderLibList(wrapperId);
+}
+function renderLibList(wrapperId){
+ const cache=LIB_CACHE[wrapperId]; if(!cache) return;
+ const {col, all}=cache;
+ const filt=LIB_FILTERS[wrapperId]||{topic:'all',subcat:''};
+ const seen=getSeen(), isCH=col==='challenges';
+ const el=document.getElementById(wrapperId);
+ const topicsWithContent=TOPICS.filter(t=>all.some(i=>i.topic===t.id));
+ const mode=LIB_VIEW_MODE[wrapperId] || (window.innerWidth<=920 ? 'list' : 'map');
+
+ const pills=[
+   `<button class="lib-tpill${filt.topic==='all'?' active':''}" style="--tc:var(--accent)" onclick="libSetTopicFilter('${wrapperId}','all')"><span class="lib-tpill-icon"><i data-lucide="layout-grid" style="width:13px"></i></span><span>All Topics</span></button>`,
+   ...topicsWithContent.map(t=>`<button class="lib-tpill${filt.topic===t.id?' active':''}" style="--tc:${t.color}" onclick="libSetTopicFilter('${wrapperId}','${t.id}')"><span class="lib-tpill-icon"><svg viewBox="0 0 22 22">${iconSvg(t.id,11,11,lighten(t.color,0.6))}</svg></span><span>${t.label}</span></button>`)
+ ];
+ const dockId='dock-'+(DOCK_MAP[wrapperId]?.pageKey||'');
+ let bar=`<div class="lib-filterbar"><div class="lib-filterbar-row">
+ <button class="lib-status-btn" onclick="toggleDock('${dockId}')"><i data-lucide="bar-chart-2" style="width:13px"></i> Status</button>
+ <div class="lib-topic-filters">${pills.join('')}</div>
+ <div class="lib-view-toggle">
+   <button class="lib-view-seg${mode==='map'?' active':''}" onclick="libSetView('${wrapperId}','map')"><i data-lucide="share-2" style="width:13px"></i> Map view</button>
+   <button class="lib-view-seg${mode==='list'?' active':''}" onclick="libSetView('${wrapperId}','list')"><i data-lucide="list" style="width:13px"></i> List view</button>
+ </div>
+ </div></div>`;
+
+ let items=all;
+ if(filt.topic!=='all') items=items.filter(i=>i.topic===filt.topic);
+ if(filt.subcat) items=items.filter(i=>i.subcat===filt.subcat);
+
+ if(!items.length){ el.innerHTML=bar+'<div class="empty">No modules match this filter yet.</div>'; el.scrollTop=0; lucide.createIcons(); return; }
+
+ const mapType = isCH ? 'challenge' : (col==='flashcards' ? 'flashcard' : 'article');
+
+ let body='';
+ const groupTopics = filt.topic==='all' ? topicsWithContent : topicsWithContent.filter(t=>t.id===filt.topic);
+ for(const topic of groupTopics){
+   const topicItems=items.filter(i=>i.topic===topic.id); if(!topicItems.length) continue;
+   const done=topicItems.filter(i=>seen[i.id]).length;
+   const blockHtml = mode==='list'
+     ? buildItemListBlock(topic, topicItems, wrapperId, col, mapType, done)
+     : buildItemMapBlock(topic, topicItems, wrapperId, col, mapType, done);
+   body+=`<div class="lib-topic-block">${blockHtml}</div>`;
+ }
+ el.innerHTML=bar+`<div class="lib-body">${body}</div>`;
+ el.scrollTop=0;
+ lucide.createIcons();
+ if(mode==='map') initItemMapZoomAll(el);
+}
+async function libOpenArt(id, wrapperId, col){
+ col = col || 'articles';
+ const el=document.getElementById(wrapperId);
+ const snap=await db.collection(col).doc(id).get(); const item={id:snap.id,...snap.data()}; markSeen(item.id);
+ const {fc,ch}=await findSiblings(item);
+ const foot=linkedFooter(fc,ch,`libShowLinked('flashcards','${fc?fc.id:''}','${wrapperId}','${item.id}')`,`libShowLinked('challenges','${ch?ch.id:''}','${wrapperId}','${item.id}')`);
+ el.innerHTML=`<div style="max-width:820px; margin:0 auto;">
+<button class="back-btn" onclick="renderLibList('${wrapperId}')">← Return to database</button>
+<div class="article-reader"><h1>${item.title}</h1>${md(stripH1(item.content||''))}${foot}</div></div>`;
+ el.scrollTop=0;
+ lucide.createIcons();
+}
+async function libOpenFC(id, wrapperId){
+ const el=document.getElementById(wrapperId);
+ const snap=await db.collection('flashcards').doc(id).get(); const item={id:snap.id,...snap.data()}; markSeen(item.id);
+ el.innerHTML=`<div style="max-width:620px; margin:0 auto;">
+<button class="back-btn" onclick="renderLibList('${wrapperId}')">← Return to decks</button>
+<div style="font-size:15px; font-weight:700; color:#fff; margin-bottom:16px;">${item.title}</div>
+   ${(item.pairs||[]).map(p=>`<div class="fc-card" onclick="this.classList.toggle('flipped')"><div class="fc-front">${p.q}</div><div class="fc-back">${p.a}</div><div class="fc-hint">tap to flip</div></div>`).join('')}</div>`;
+ el.scrollTop=0;
+}
+
+let aiInsightActive=false, aiMockGeneratedText="";
+function triggerAiInsight() {
+ const text=document.getElementById('diary-input').value.trim();
+ if(!text){ alert('Type some notes first to allow AI processing.'); return; }
+ aiInsightActive=true;
+ aiMockGeneratedText=`[AI Mental Architecture Analysis]: Detected cognitive parameters shifting towards standard vectors. Processing high emotional core value. Recommendation: Explore "${LABELS['emo']}" or "${LABELS['res']}" nodes inside your map to balance optimization patterns.`;
+ alert("AI analysis simulation complete. Insight attached — save the entry to log it permanently.");
+}
+let selectedMood='';
+function selectMood(btn,mood){ document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('sel')); btn.classList.add('sel'); selectedMood=mood; }
+async function saveDiaryEntry(){
+ const text=document.getElementById('diary-input').value.trim();
+ if(!text){alert('Empty notes cannot be saved.');return;}
+ const today=new Date().toISOString().split('T')[0];
+ const payload={ text, date:today, mood:selectedMood, created:new Date().toISOString() };
+ if(aiInsightActive) payload.aiInsight=aiMockGeneratedText;
+ await userDiaryCol().add(payload);
+ document.getElementById('diary-input').value=''; document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('sel'));
+ selectedMood=''; aiInsightActive=false;
+ RAW.diary.push(payload); refreshDashboard(); loadDiaryEntries();
+}
+async function loadDiaryEntries(){
+ const el=document.getElementById('diary-entries');
+ el.innerHTML='<div class="loading">Decoding neural log…</div>';
+ try{
+   const snap=await userDiaryCol().orderBy('created','desc').get();
+   const items=snap.docs.map(d=>({id:d.id,...d.data()})); RAW.diary=items;
+   if(!items.length){el.innerHTML='<div class="empty">No entries yet. Capture your first observation on the left.</div>';return;}
+   el.innerHTML=items.map(item=>`
+<div class="diary-entry">
+<div class="de-header">
+<div class="de-date"><i data-lucide="clock" style="width:11px; display:inline-block; vertical-align:middle;"></i> ${fmtDate(item.date)}</div>
+         ${item.mood?`<span class="de-mood">${item.mood}</span>`:''}
+</div>
+<div class="de-text">${item.text}</div>
+       ${item.aiInsight ? `<div class="ai-insight-box"><i data-lucide="sparkles" style="width:14px; flex-shrink:0;"></i><span>${item.aiInsight}</span></div>` : ''}
+</div>`).join('');
+   lucide.createIcons();
+ }catch(e){el.innerHTML=`<div class="empty">⚠ Sync interrupted: ${e.message}</div>`;}
+}
+
+function mdInline(s){
+ return s
+   .replace(/!\[([^\]]*)\]\(([^)]+)\)/g,'<img src="$2" alt="$1"/>')
+   .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+   .replace(/\*([^*\n]+)\*/g,'<em>$1</em>')
+   .replace(/`([^`]+)`/g,'<code>$1</code>');
+}
+function md(t){
+ if(!t) return '';
+ const lines=String(t).split('\n');
+ let html='', inUl=false, inOl=false;
+ const closeLists=()=>{ if(inUl){html+='</ul>';inUl=false;} if(inOl){html+='</ol>';inOl=false;} };
+ for(const l of lines){
+   if(/^\s*$/.test(l)){ closeLists(); continue; }
+   if(/^### /.test(l)){ closeLists(); html+='<h3>'+mdInline(l.slice(4))+'</h3>'; continue; }
+   if(/^## /.test(l)){ closeLists(); html+='<h2>'+mdInline(l.slice(3))+'</h2>'; continue; }
+   if(/^# /.test(l)){ closeLists(); html+='<h1>'+mdInline(l.slice(2))+'</h1>'; continue; }
+   if(/^>\s?/.test(l)){ closeLists(); html+='<blockquote>'+mdInline(l.replace(/^>\s?/,''))+'</blockquote>'; continue; }
+   if(/^---+\s*$/.test(l)){ closeLists(); html+='<hr/>'; continue; }
+   if(/^- /.test(l)){ if(inOl)closeLists(); if(!inUl){html+='<ul>';inUl=true;} html+='<li>'+mdInline(l.slice(2))+'</li>'; continue; }
+   if(/^\d+\.\s/.test(l)){ if(inUl)closeLists(); if(!inOl){html+='<ol>';inOl=true;} html+='<li>'+mdInline(l.replace(/^\d+\.\s/,''))+'</li>'; continue; }
+   closeLists(); html+='<p>'+mdInline(l)+'</p>';
+ }
+ closeLists();
+ return html;
+}
+// Article content conventionally starts with the title as an H1; the reader renders the
+// title separately, so strip a leading H1 line to avoid showing the title twice.
+function stripH1(c){ return String(c||'').replace(/^\uFEFF?\s*#\s+[^\n]*\r?\n+/, ''); }
+function hexA(hex,a){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return `rgba(${r},${g},${b},${a})`;}
+function fmtDate(d){if(!d)return'';try{return new Date(d).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});}catch{return d;}}
+
+// ===== Challenge / Quest =====
+function escHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function nl2br(s){return escHtml(s).replace(/\n/g,'<br>');}
+let CH_STATE=null;
+function challengeView(item, backHtml){
+ const scenario=item.scenario||item.content||'';
+ const opts=(item.options&&item.options.length)?item.options:[];
+ CH_STATE={opts};
+ let html=(backHtml||'')+`<div class="challenge-view">
+   <div class="ch-scenario-label">Scenario</div>
+   ${item.image_url?`<img src="${escHtml(item.image_url)}" style="width:100%;border-radius:12px;margin-bottom:14px;"/>`:''}
+   <div class="ch-scenario">${md(scenario)}</div>`;
+ if(opts.length){
+   html+=`<div class="ch-prompt">What do you do?</div><div class="ch-options" id="ch-options">`;
+   html+=opts.map((o,i)=>`
+     <button class="ch-opt" id="ch-opt-${i}" onclick="chPick(${i})">
+       <span class="ch-opt-letter">${String.fromCharCode(65+i)}</span>
+       <span class="ch-opt-text">${escHtml(o.text)}</span>
+       <span class="ch-opt-fb" id="ch-fb-${i}">${nl2br(o.feedback)}</span>
+     </button>`).join('');
+   html+=`</div><div class="ch-result" id="ch-result"></div>`;
+ } else {
+   html+=`<div class="empty">This quest has no outcomes yet.</div>`;
+ }
+ html+=`</div>`;
+ return html;
+}
+function chPick(i){
+ if(!CH_STATE||CH_STATE.answered)return;
+ CH_STATE.answered=true;
+ const opts=CH_STATE.opts, chosen=opts[i];
+ const bestIdx=opts.findIndex(o=>o.correct);
+ opts.forEach((o,idx)=>{
+   const btn=document.getElementById('ch-opt-'+idx);
+   if(!btn)return;
+   btn.classList.add('locked','revealed');
+   if(o.correct)btn.classList.add('correct');
+   if(idx===i&&!o.correct)btn.classList.add('wrong');
+   if(idx===i)btn.classList.add('chosen');
+ });
+ const res=document.getElementById('ch-result');
+ if(res){
+   if(chosen&&chosen.correct){
+     res.className='ch-result show win';
+     res.innerHTML='✓ Optimal response — well judged.';
+   } else {
+     res.className='ch-result show miss';
+     const bestLetter=bestIdx>=0?String.fromCharCode(65+bestIdx):'';
+     res.innerHTML='Not the strongest move.'+(bestLetter?(' The most effective response was '+bestLetter+'.'):'')+' Compare the outcomes above.';
+   }
+ }
+}
+function openChallenge(idx){
+ const item=activeItems[idx];markSeen(item.id);
+ document.getElementById('cp-body').innerHTML=challengeView(item,`<button class="back-btn" onclick="loadPanel()">← Topic modules</button>`);
+ document.getElementById('cp-body').scrollTop=0;
+}
+async function libOpenChallenge(id, wrapperId){
+ const el=document.getElementById(wrapperId);
+ const snap=await db.collection('challenges').doc(id).get(); const item={id:snap.id,...snap.data()}; markSeen(item.id);
+ el.innerHTML=`<div style="max-width:720px;margin:0 auto;">`+challengeView(item,`<button class="back-btn" onclick="renderLibList('${wrapperId}')">← Return to operations</button>`)+`</div>`;
+ el.scrollTop=0;
+}
+
+function iconSvg(id,cx,cy,col){
+ const s=`fill="none" stroke="${col}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"`;
+ if(id==='perf') return `<g ${s}><polyline points="${cx-7},${cy+5} ${cx-3},${cy-3} ${cx+2},${cy+2} ${cx+7},${cy-6}"/><polyline points="${cx+3},${cy-6} ${cx+7},${cy-6} ${cx+7},${cy-2}"/></g>`;
+ if(id==='work') return `<g ${s}><rect x="${cx-10}" y="${cy+3}" width="5" height="6" rx="1"/><rect x="${cx-2}" y="${cy-2}" width="5" height="11" rx="1"/><rect x="${cx+5}" y="${cy-7}" width="5" height="16" rx="1"/></g>`;
+ if(id==='cog')  return `<g ${s}><rect x="${cx-9}" y="${cy-9}" width="8" height="8" rx="1.5"/><rect x="${cx+1}" y="${cy-9}" width="8" height="8" rx="1.5"/><rect x="${cx-9}" y="${cy+1}" width="8" height="8" rx="1.5"/><rect x="${cx+1}" y="${cy+1}" width="8" height="8" rx="1.5"/></g>`;
+ if(id==='pers') return `<g ${s}><circle cx="${cx}" cy="${cy-4}" r="5"/><path d="M${cx-8},${cy+9} c0-4 3.5-7 8-7s8 3 8 7"/></g>`;
+ if(id==='res')  return `<g ${s}><circle cx="${cx}" cy="${cy+1}" r="6"/><path d="M${cx},${cy-8} v4"/><path d="M${cx-3},${cy-6} l3,3 3,-3"/></g>`;
+ if(id==='emo')  return `<g ${s}><path d="M${cx},${cy+10}C${cx},${cy+10} ${cx-11},${cy+3} ${cx-11},${cy-3}C${cx-11},${cy-8} ${cx-7},${cy-10} ${cx-4},${cy-10}C${cx-2},${cy-10} ${cx},${cy-7} ${cx},${cy-7}C${cx},${cy-7} ${cx+2},${cy-10} ${cx+4},${cy-10}C${cx+7},${cy-10} ${cx+11},${cy-8} ${cx+11},${cy-3}C${cx+11},${cy+3} ${cx},${cy+10} ${cx},${cy+10}Z"/></g>`;
+ if(id==='soc')  return `<g ${s}><circle cx="${cx-4}" cy="${cy-4}" r="5"/><circle cx="${cx+6}" cy="${cy-6}" r="3.5"/><path d="M${cx-13},${cy+10}c0-4 3-7 7-7s7 3 7 7"/><path d="M${cx+3},${cy+9}c0-3 2-5 5-5s5 2 5 5"/></g>`;
+ if(id==='bio')  return `<g ${s}><circle cx="${cx}" cy="${cy-2}" r="6"/><path d="M${cx},${cy+4}v6"/><path d="M${cx-3},${cy+8}h6"/><path d="M${cx-5},${cy-5}C${cx-10},${cy-9} ${cx-10},${cy+3} ${cx-5},${cy+3}"/><path d="M${cx+5},${cy-5}C${cx+10},${cy-9} ${cx+10},${cy+3} ${cx+5},${cy+3}"/></g>`;
+ if(id==='sport')return `<g ${s}><path d="M${cx-6},${cy-10} L${cx-1.5},${cy-1}"/><path d="M${cx+6},${cy-10} L${cx+1.5},${cy-1}"/><circle cx="${cx}" cy="${cy+4}" r="6"/><path d="M${cx-2.6},${cy+4} l1.8,2 3.4,-4"/></g>`;
+ return '';
+}
+
+// ===== boot =====
+// ═══════════════════════════════════════════════════════════════════
+//  IN-APP NOTIFICATIONS — welcome / level-up / topic-mastery
+//  Fires client-side; what has already been shown is tracked per user in
+//  users/{uid}/state/notifs so nothing repeats. Voice matches the article seed.
+// ═══════════════════════════════════════════════════════════════════
+const NOTIF_ICON = {bio:'flask-conical',cog:'brain-circuit',emo:'heart',perf:'trending-up',pers:'user',res:'flame',soc:'users',sport:'medal',work:'briefcase'};
+
+const N_WELCOME = {
+ kicker:'Systems online', icon:'brain', title:'Welcome to S.H.I.E.L.D.',
+ body:[
+  `Think of this as a training ground for your mind. <strong>S.H.I.E.L.D.</strong> — <em>Supporting Human Intelligence and Emotional Learning and Development</em> — turns psychology and self-development into something you can actually practise, one small module at a time.`,
+  `Everything lives on a map of your mind: nine topics, from Cognitive and Emotions to Resilience and Sport. Each holds three kinds of module — and you master a topic by working through them.`],
+ list:[
+  {ic:'book-open', c:'#5ec8f5', t:'<b>Articles</b> give you the core idea — a short, clear read with a hook and a key takeaway.'},
+  {ic:'layers', c:'#b478ff', t:'<b>Cards</b> lock it into memory with quick question-and-answer flips.'},
+  {ic:'zap', c:'#ffd23f', t:'<b>Quests</b> test it against a real scenario, so the idea becomes a skill.'}],
+ close:`Open any node on the map to begin. You will climb ranks, keep a streak, and watch your mind status fill in as you go. No rush — depth beats speed here.`,
+ primary:'Enter the map', foot:'Tip — start with whatever pulls you in. Curiosity is a good compass.'
+};
+
+// keyed by the level at which each rank BEGINS (11,21,…91); level 1 = welcome
+const N_LEVELUPS = {
+ 11:{rank:'Circuit',prev:'Spark',kicker:'Rank up — Circuit',headline:`Circuit complete`,
+  body:[`You have left <em>Spark</em> behind and reached <strong>Circuit</strong>. The isolated sparks are wiring together — ideas from one topic starting to light up another.`,`This is where learning compounds. What you picked up in Emotions quietly sharpens your read on Social World; what you built in Focus feeds Performance.`],
+  push:`Aim for your first fully mastered topic. Completing all three module types in one area is a milestone worth chasing.`},
+ 21:{rank:'Synapse',prev:'Circuit',kicker:'Rank up — Synapse',headline:`Synapses firing`,
+  body:[`Welcome to <strong>Synapse</strong>. A synapse is a connection — and connection is the point. You are no longer collecting facts; you are building links between them.`,`The best thinkers are not the ones who know the most, but the ones whose knowledge talks to itself. Yours is starting to.`],
+  push:`Widen the map. Try a topic you have been avoiding — the gaps are where the growth hides.`},
+ 31:{rank:'Vector',prev:'Synapse',kicker:'Rank up — Vector',headline:`You have a Vector`,
+  body:[`You have reached <strong>Vector</strong>. A vector has both size and direction — and so, now, does your progress. This is no longer drift; it is momentum with an aim.`,`You are past the point where motivation carries you. What carries you now is the habit you have built, quietly, one module at a time.`],
+  push:`Pick a direction and commit to it — push a second topic toward full mastery.`},
+ 41:{rank:'Cortex',prev:'Vector',kicker:'Rank up — Cortex',headline:`Cortex forming`,
+  body:[`You have entered <strong>Cortex</strong> — the region where the mind does its highest-order work: planning, reflecting, deciding. You have earned the name.`,`By now the modules are less about new information and more about refinement: sharper judgement, steadier emotion, cleaner thinking under pressure.`],
+  push:`Depth over breadth from here. Revisit a mastered topic and notice how differently it reads now.`},
+ 51:{rank:'Nexus',prev:'Cortex',kicker:'Rank up — Nexus · past halfway',headline:`You are the Nexus`,
+  body:[`Past the halfway line and into <strong>Nexus</strong> — the central point where everything meets. That is what your mind has become across these levels.`,`Most people who start something like this never reach here. You did it the slow, real way: one module, one recall, one honest choice at a time.`],
+  push:`The back half rewards consistency. Protect the streak, and let mastery accumulate topic by topic.`},
+ 61:{rank:'Oracle',prev:'Nexus',kicker:'Rank up — Oracle',headline:`The Oracle sees`,
+  body:[`You have reached <strong>Oracle</strong>. An oracle does not just know — it foresees. You are starting to anticipate: catching a bias before it bites, reading a mood before it turns, spotting the move before it is made.`,`That foresight is not magic. It is pattern recognition, earned from everything you have already worked through.`],
+  push:`Trust the pattern-sense you have built — then keep feeding it. Close out another topic.`},
+ 71:{rank:'Architect',prev:'Oracle',kicker:'Rank up — Architect',headline:`You are the Architect`,
+  body:[`Welcome to <strong>Architect</strong>. You are no longer just learning the mind — you are designing with it. Systems, habits, environments: you build the conditions your best self shows up in.`,`Knowledge became understanding a while ago. Now understanding is becoming design.`],
+  push:`Architects finish what they start. Which topic is closest to mastery? Complete it.`},
+ 81:{rank:'Luminant',prev:'Architect',kicker:'Rank up — Luminant',headline:`Luminant`,
+  body:[`You have reached <strong>Luminant</strong> — one who gives off light. What you have built is no longer just for you; it shows. Clearer thinking, steadier feeling, sharper judgement are visible in how you move through the world.`,`Very few travel this far. The fact that you did says as much about your character as your curiosity.`],
+  push:`You are within reach of the summit. Sweep up the last unmastered topics.`},
+ 91:{rank:'Singularity',prev:'Luminant',kicker:'Rank up — Singularity · final rank',headline:`Singularity`,
+  body:[`The final rank. <strong>Singularity</strong> — the point where everything converges into something greater than its parts. Across every topic, the pieces of your mind now work as one system.`,`From here, Level 100 is the last climb. You have already done the hard part: you changed, deliberately, and stayed with it.`],
+  push:`Finish it. Complete what remains and reach the summit — Level 100.`},
+};
+
+const N_MASTERY = {
+ pers:{quote:`"Know thyself." — inscribed at Delphi`,headline:`You have mapped the self`,
+  body:[`You have finished every module in <strong>Personality</strong> — and that is no small thing. You started with a deceptively simple question: <em>why are you the way you are?</em>`,`You learned to think in spectra rather than boxes, to separate a passing state from an enduring trait, and to hold your labels loosely enough that they inform you without imprisoning you. You met the Big Five, saw through the seductive tidiness of type quizzes, and even looked into personality's shadow side without flinching.`,`Most importantly, you learned the difference between a <em>map</em> and the <em>territory</em>. Your traits describe your patterns; they were never a measure of your worth.`],
+  takeaway:`You now hold a working model of who you are — stable but not fixed, describable but not reducible. Carry it lightly, and keep editing it.`},
+ cog:{quote:`"The mind is not a vessel to be filled, but a fire to be kindled." — Plutarch`,headline:`Your thinking, upgraded`,
+  body:[`Every <strong>Cognitive</strong> module is behind you. You went under the hood of your own mind — memory, attention, learning, bias — and came out understanding the machinery that runs everything else.`,`You saw why cramming fails and spacing wins, how attention is a spotlight you can actually aim, and where your fastest thinking quietly lies to you. You learned that being smart is less about raw horsepower and more about knowing your own blind spots.`],
+  takeaway:`You have not just learned facts about the mind — you have learned to <em>use</em> it more deliberately. That skill compounds in every other topic you touch.`},
+ emo:{quote:`"Between stimulus and response there is a space." — Viktor Frankl`,headline:`Fluent in feeling`,
+  body:[`You have completed all of <strong>Emotions</strong>. You learned the thing schools forget to teach: that emotions are information, not orders — signals to read, not commands to obey.`,`You practised naming what you feel, widening the pause between trigger and reaction, and reading the room in others. Emotional intelligence is not about being calm all the time; it is about not being hijacked. You are harder to hijack now.`],
+  takeaway:`Feeling and thinking are not enemies. You have learned to let them work together — which is where real composure comes from.`},
+ res:{quote:`"The oak fought the wind and was broken; the reed bent and survived." — Aesop`,headline:`Bent, not broken`,
+  body:[`You finished every <strong>Resilience</strong> module — the ones that are easy to skim and hard to live. You studied how people bounce back, how failure gets metabolised into growth, and how mental toughness is trained rather than born.`,`You met your inner critic and learned to answer it. You reframed setbacks as data. None of this makes hardship painless — it makes it survivable, and often usable.`],
+  takeaway:`Resilience is not the absence of stress; it is the capacity to bend under it and return. You have built more of that capacity than you had.`},
+ soc:{quote:`"We are, quite literally, wired to connect." — Daniel Goleman`,headline:`Fluent in people`,
+  body:[`All of <strong>Social World</strong> is complete. You studied the invisible physics between people — motivation, persuasion, status, first impressions, and the quiet machinery of influence.`,`You learned to spot manipulation without becoming cynical, to read a room's status dynamics, and to understand why people do what they do rather than just reacting to it. Social skill is not charm; it is awareness. Yours went up.`],
+  takeaway:`People are the environment you swim in every day. You can now navigate it with far more clarity — and far less accidental friction.`},
+ perf:{quote:`"We are what we repeatedly do. Excellence, then, is a habit." — Aristotle`,headline:`Dialled in`,
+  body:[`You have mastered <strong>Performance</strong>. You went past motivation-poster clichés into how focus, flow, and energy actually work — and how to engineer conditions that let your best show up on purpose.`,`You learned that willpower is overrated and design is underrated, that deep work is a trainable state, and that managing energy beats managing time. Peak performance is less about trying harder and more about removing what gets in the way.`],
+  takeaway:`You now know how to set the stage for your own best work — deliberately, repeatably, without waiting for the mood to strike.`},
+ work:{quote:`"Choose a job you love, and you will never have to work a day." — commonly attributed to Confucius`,headline:`The human side of work`,
+  body:[`Every <strong>Work</strong> module is done. You studied the part of professional life no org chart shows: decisions, leadership, conflict, negotiation, and the social web that really moves things.`,`You learned to disagree without damage, to negotiate without games, and to spot the difference between busyness and burnout before it costs you. Careers are built on judgement and relationships as much as on skill — and you sharpened both.`],
+  takeaway:`Work is where a huge share of life happens. You are better equipped now to make it satisfying rather than merely survivable.`},
+ bio:{quote:`"The brain is wider than the sky." — Emily Dickinson`,headline:`You met the machine`,
+  body:[`You have completed all of <strong>Biology</strong> — the ground floor everything else is built on. You toured the brain's regions and their jobs, and saw how perception is less a recording of reality and more a controlled construction.`,`Understanding the hardware changes how you read the software. When you know pain is produced by the brain, that stress is a survival system firing at the wrong target, the mind stops feeling like a mystery and starts feeling like something you can work with.`],
+  takeaway:`You now know a little of what is happening under the hood. That knowledge quietly makes every other topic make more sense.`},
+ sport:{quote:`"The body achieves what the mind believes."`,headline:`Mind and body, one system`,
+  body:[`You have finished every <strong>Sport</strong> module. You explored the place where psychology meets the body — flow states, arousal, the mental game beneath physical performance.`,`You learned that the zone is not luck but a set of conditions you can approach, that pressure is a state you can work with, and that the mind is the least-trained muscle in most athletes. You trained it.`],
+  takeaway:`Whether or not you compete, you now understand how to get mind and body pulling in the same direction — on demand, under pressure.`},
+};
+
+// ── seen-tracking + queue ──
+function notifSeen(){ return NSEEN; }
+function markNotif(key){
+ const ts=new Date().toISOString(); NSEEN[key]=ts;
+ if(UID) userStateDoc('notifs').set({[key]:ts},{merge:true}).catch(e=>console.warn('notif sync:',e.message));
+}
+let NOTIF_QUEUE=[];
+
+function notifShell(nc, innerHTML){
+ const ov=document.getElementById('notif-overlay');
+ ov.style.setProperty('--nc', nc);
+ ov.innerHTML=`<div class="notif" style="--nc:${nc}">
+    <div class="notif-glow"></div>
+    <div class="notif-close" onclick="notifDismiss()" title="Close"><i data-lucide="x"></i></div>
+    <div class="notif-inner">${innerHTML}</div></div>`;
+ ov.classList.add('open');
+ lucide.createIcons();
+}
+function notifDismiss(){
+ const ov=document.getElementById('notif-overlay');
+ ov.classList.remove('open'); ov.innerHTML='';
+ // show the next queued notification, if any
+ if(NOTIF_QUEUE.length){ const next=NOTIF_QUEUE.shift(); setTimeout(next, 320); }
+}
+function notifGoMap(){ notifDismiss(); showPage('map'); }
+
+function showWelcomeNotif(){
+ const w=N_WELCOME, nc='#7dd6e8';
+ const list=w.list.map(l=>`<li><span class="li-ic" style="--li:${l.c}"><i data-lucide="${l.ic}"></i></span><span>${l.t}</span></li>`).join('');
+ notifShell(nc,
+  `<span class="notif-kicker"><i data-lucide="power"></i> ${w.kicker}</span>
+   <div class="emblem"><i data-lucide="${w.icon}"></i></div>
+   <h1>${w.title}</h1>
+   ${w.body.map(p=>`<p>${p}</p>`).join('')}
+   <ul class="notif-list">${list}</ul>
+   <p style="margin-top:14px">${w.close}</p>
+   <div class="notif-actions">
+     <button class="n-btn primary" onclick="notifGoMap()"><i data-lucide="map"></i> ${w.primary}</button>
+     <button class="n-btn ghost" onclick="notifDismiss()"><i data-lucide="check"></i> Got it</button>
+   </div>
+   <div class="notif-foot">${w.foot}</div>`);
+}
+
+function showLevelNotif(entryLevel){
+ const L=N_LEVELUPS[entryLevel]; if(!L) return;
+ const nc='#7dd6e8', idx=RANKS.indexOf(L.rank);
+ const nextRank = idx<RANKS.length-1 ? RANKS[idx+1] : 'Level 100';
+ notifShell(nc,
+  `<span class="notif-kicker"><i data-lucide="arrow-up-circle"></i> ${L.kicker}</span>
+   <div class="emblem"><i data-lucide="chevrons-up"></i></div>
+   <h1>${L.headline}</h1>
+   <div class="rank-line">${L.prev.toUpperCase()} &rarr; ${L.rank.toUpperCase()} &middot; LV ${entryLevel}</div>
+   ${L.body.map(p=>`<p>${p}</p>`).join('')}
+   <div class="notif-stats">
+     <div class="nstat"><div class="k">Rank</div><div class="v">${L.rank}</div></div>
+     <div class="nstat"><div class="k">Level</div><div class="v">${entryLevel}</div></div>
+     <div class="nstat"><div class="k">Next rank</div><div class="v">${nextRank}</div></div>
+   </div>
+   <p style="margin-top:16px">${L.push}</p>
+   <div class="notif-actions">
+     <button class="n-btn primary" onclick="notifGoMap()"><i data-lucide="target"></i> Back to the map</button>
+     <button class="n-btn ghost" onclick="notifDismiss()"><i data-lucide="check"></i> Nice</button>
+   </div>`);
+}
+
+function showMasteryNotif(topicId){
+ const m=N_MASTERY[topicId]; if(!m) return;
+ const nc=COLORS[topicId], label=LABELS[topicId];
+ notifShell(nc,
+  `<span class="notif-kicker"><i data-lucide="award"></i> Topic mastered &middot; ${label}</span>
+   <div class="emblem"><i data-lucide="${NOTIF_ICON[topicId]||'sparkles'}"></i></div>
+   <h1>${m.headline}</h1>
+   <blockquote>${m.quote}</blockquote>
+   ${m.body.map(p=>`<p>${p}</p>`).join('')}
+   <h2 style="margin-top:6px"><i data-lucide="key" style="width:15px;vertical-align:-2px"></i> Key takeaway</h2>
+   <p>${m.takeaway}</p>
+   <div class="notif-actions">
+     <button class="n-btn primary" onclick="notifGoMap()"><i data-lucide="compass"></i> Next topic</button>
+     <button class="n-btn ghost" onclick="notifDismiss()"><i data-lucide="check"></i> Done</button>
+   </div>
+   <div class="notif-foot">Mastery unlocked — every article, card, and quest in ${label} complete.</div>`);
+}
+
+// ── trigger check: called after any progress change ──
+// Compares current rank-entry level + mastered topics against what's already
+// been shown; queues any newly-earned notifications (mastery first, then the
+// highest new rank) so they appear one after another.
+let NOTIF_READY=false;
+function checkNotifications(){
+ if(!NOTIF_READY) return;
+ const seenN=notifSeen();
+ const pending=[];
+
+ // topic mastery: every module in a topic completed
+ const seen=getSeen();
+ TOPIC_IDS.forEach(id=>{
+   if(!N_MASTERY[id]) return;
+   const items=(RAW.items||[]).filter(i=>i.topic===id);
+   if(!items.length) return;
+   const allDone=items.every(i=>seen[i.id]);
+   const key='mastery_'+id;
+   if(allDone && !seenN[key]){ markNotif(key); pending.push(()=>showMasteryNotif(id)); }
+ });
+
+ // rank-up: crossing into a new rank band (entry levels 11..91)
+ const lvl=computeXpModel().level;
+ Object.keys(N_LEVELUPS).map(Number).sort((a,b)=>a-b).forEach(entry=>{
+   const key='rank_'+entry;
+   if(lvl>=entry && !seenN[key]){ markNotif(key); pending.push(()=>showLevelNotif(entry)); }
+ });
+
+ if(!pending.length) return;
+ // if a notification is already open, queue; otherwise show the first now
+ const ovOpen=document.getElementById('notif-overlay').classList.contains('open');
+ if(ovOpen){ NOTIF_QUEUE.push(...pending); }
+ else { const first=pending.shift(); NOTIF_QUEUE.push(...pending); first(); }
+}
+
+// welcome fires once, on first ever load
+function maybeWelcome(){
+ const seenN=notifSeen();
+ if(!seenN.welcome){ markNotif('welcome'); showWelcomeNotif(); return true; }
+ return false;
+}
+
+// Silently mark everything currently earned as already-notified, without
+// showing anything. Run once at startup so a returning user isn't greeted by
+// a replay of milestones they passed in an earlier session — only milestones
+// crossed *during* this session (via markSeen) actually surface.
+function baselineNotifications(){
+ const seenN=notifSeen();
+ const patch={};
+ const seen=getSeen();
+ TOPIC_IDS.forEach(id=>{
+   if(!N_MASTERY[id]) return;
+   const items=(RAW.items||[]).filter(i=>i.topic===id);
+   if(!items.length) return;
+   const key='mastery_'+id;
+   if(items.every(i=>seen[i.id]) && !seenN[key]){ const ts=new Date().toISOString(); seenN[key]=ts; patch[key]=ts; }
+ });
+ const lvl=computeXpModel().level;
+ Object.keys(N_LEVELUPS).map(Number).forEach(entry=>{
+   const key='rank_'+entry;
+   if(lvl>=entry && !seenN[key]){ const ts=new Date().toISOString(); seenN[key]=ts; patch[key]=ts; }
+ });
+ if(Object.keys(patch).length && UID)
+   userStateDoc('notifs').set(patch,{merge:true}).catch(e=>console.warn('notif baseline sync:',e.message));
+}
+
+// ═══ auth flow + gated boot ══════════════════════════════════════════════
+// The app used to boot immediately; now everything waits behind the auth
+// gate. onAuthStateChanged is the single source of truth: user present →
+// load per-user state, run startApp() once; no user → show the gate.
+let AUTH_MODE='signin'; // 'signin' | 'signup'
+let APP_STARTED=false;
+
+function authErrText(e){
+ const c=e && e.code || '';
+ if(c==='auth/invalid-email') return 'That email address doesn\u2019t look valid.';
+ if(c==='auth/user-not-found') return 'No account with this email. Use "Create account".';
+ if(c==='auth/wrong-password'||c==='auth/invalid-credential'||c==='auth/invalid-login-credentials') return 'Wrong email or password.';
+ if(c==='auth/email-already-in-use') return 'This email already has an account. Use "Sign in".';
+ if(c==='auth/weak-password') return 'Password must be at least 6 characters.';
+ if(c==='auth/too-many-requests') return 'Too many attempts — try again in a minute.';
+ if(c==='auth/network-request-failed') return 'Network error — check your connection.';
+ return (e && e.message) || 'Something went wrong.';
+}
+function authToggleMode(){
+ AUTH_MODE = AUTH_MODE==='signin' ? 'signup' : 'signin';
+ document.getElementById('auth-btn').textContent = AUTH_MODE==='signin' ? 'Sign in' : 'Create account';
+ document.getElementById('auth-toggle').textContent = AUTH_MODE==='signin' ? 'Create account' : 'I have an account';
+ document.getElementById('auth-sub').textContent = AUTH_MODE==='signin' ? 'Sign in to sync your progress' : 'Create your account';
+ document.getElementById('auth-err').textContent='';
+}
+async function authSubmit(){
+ const email=document.getElementById('auth-email').value.trim();
+ const pass=document.getElementById('auth-pass').value;
+ const err=document.getElementById('auth-err'); err.textContent='';
+ if(!email || !pass){ err.textContent='Enter your email and password.'; return; }
+ const btn=document.getElementById('auth-btn'); btn.disabled=true;
+ try{
+   if(AUTH_MODE==='signin') await auth.signInWithEmailAndPassword(email,pass);
+   else await auth.createUserWithEmailAndPassword(email,pass);
+   // onAuthStateChanged takes it from here
+ }catch(e){ err.textContent=authErrText(e); }
+ btn.disabled=false;
+}
+async function authForgot(){
+ const email=document.getElementById('auth-email').value.trim();
+ const err=document.getElementById('auth-err');
+ if(!email){ err.textContent='Type your email above first, then tap "Forgot password?".'; return; }
+ try{ await auth.sendPasswordResetEmail(email); err.textContent='Reset email sent — check your inbox.'; }
+ catch(e){ err.textContent=authErrText(e); }
+}
+function authSignOut(){ auth.signOut().then(()=>location.reload()); }
+
+// Enter key submits the gate
+['auth-email','auth-pass'].forEach(id=>{
+ document.getElementById(id).addEventListener('keydown',e=>{ if(e.key==='Enter') authSubmit(); });
+});
+
+async function startApp(){
+ await loadCustomSubcats();
+ recomputeStats();
+ buildMap();
+ buildMetrics();
+ updateTopbar();
+ await loadStats();
+ refreshDashboard();
+ // notifications: baseline first (silently absorb everything already earned),
+ // then enable live checks. Welcome still shows on the very first open.
+ baselineNotifications();
+ NOTIF_READY=true;
+ maybeWelcome();
+}
+
+auth.onAuthStateChanged(async user=>{
+ if(!user){ document.getElementById('auth-gate').classList.remove('hidden'); return; }
+ if(APP_STARTED) return;
+ APP_STARTED=true;
+ UID=user.uid; USER_EMAIL=user.email;
+ try{
+   await loadUserState();
+   purgeLegacyLocalState();
+   db.collection('users').doc(UID).set(
+     { email:USER_EMAIL, lastLogin:new Date().toISOString() },
+     { merge:true }
+   ).catch(()=>{});
+ }catch(e){ console.warn('user state load:', e.message); }
+ // topbar chip
+ const chip=document.getElementById('auth-chip');
+ if(chip){ chip.style.display='inline-flex'; document.getElementById('auth-chip-email').textContent=USER_EMAIL||''; lucide.createIcons(); }
+ document.getElementById('auth-gate').classList.add('hidden');
+ await startApp();
+});
+</script>
+</body>
+</html>
